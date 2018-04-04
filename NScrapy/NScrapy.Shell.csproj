@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <AssemblyName>NScrapy.Shell</AssemblyName>
+    <RootNamespace>NScrapy.Shell</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NScrapy.Infra\NScrapy.Infra.csproj" />
+    <ProjectReference Include="..\NScrapy.Spider\NScrapy.Spider.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Downloader\" />
+  </ItemGroup>
+
+</Project>
