@@ -5,7 +5,7 @@ using NScrapy.Infra;
 
 namespace NScrapy.Shell
 {
-    public class Shell
+    public class Scrapy
     {
         private NScrapyContext _context = null;
 
@@ -19,14 +19,14 @@ namespace NScrapy.Shell
             }
         }
 
-        private Shell()
+        private Scrapy()
         {
             this._context = new NScrapyContext();
         }
 
-        public static Shell GetInstance()
+        public static Scrapy GetInstance()
         {
-            return new Shell();
+            return new Scrapy();
         }
 
         public IResponse Crawl(string spiderName)
