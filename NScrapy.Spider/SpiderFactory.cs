@@ -1,14 +1,63 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Microsoft.Extensions.Configuration;
+using System.IO;
+using System.Reflection;
+using System.Linq;
+using NScrapy.Infra.Attributes.SpiderAttributes;
 
 namespace NScrapy.Spider
 {
     public class SpiderFactory
     {
-        public Spider GetSpider(string name)
+        static AppDomain currentApp = System.AppDomain.CurrentDomain;
+        static Assembly spiderProjectAssembly = null;
+        static IConfiguration Configuration;
+        static string SpiderProjectName = string.Empty;
+        static SpiderFactory()
         {
-            throw new NotImplementedException();
+            var builder = new ConfigurationBuilder();
+            builder.SetBasePath(Directory.GetCurrentDirectory()).AddJsonFile("appsetting.json");
+            Configuration = builder.Build();
+            SpiderProjectName = Configuration["AppSettings:SpiderProject"];
+            spiderProjectAssembly = currentApp.GetAssemblies().Where(assembly => assembly.GetName().Name == SpiderProjectName).FirstOrDefault();            
+        }
+
+        public static Spider GetSpider(string name)
+        {
+            Type spiderType = null;
+            spiderType = spiderProjectAssembly.GetType(name);
+            if(spiderType==null)
+            {
+                var types = spiderProjectAssembly.ExportedTypes;
+                foreach(var type in types)
+                {
+                    var nameAttr = type.GetCustomAttribute(typeof(NameAttribute)) as NameAttribute;
+                    if(name==null)
+                    {
+                        continue;
+                    }
+                    if(name==nameAttr.Name && type.GetTypeInfo().IsSubclassOf(typeof(Spider)))
+                    {
+                        spiderType = type;
+                        break;
+                    }
+                }
+            }
+            if(spiderType!=null)
+            {
+                if (Activator.CreateInstance(spiderType) is Spider spider)
+                {
+                    if (spiderType.GetCustomAttribute(typeof(URLAttribute)) is URLAttribute urlAttr)
+                    {
+                        spider.URLs= urlAttr.URLs.ToList();
+                    }
+                    return spider;
+                }
+                throw new Exception($"Create Spider {spiderType.FullName} failed");
+            }
+            throw new Exception($"Spider with name {name} can not be found, please check the spider name and if it is inherting NScrapy.Spider.Spider class");
         }
     }
 }

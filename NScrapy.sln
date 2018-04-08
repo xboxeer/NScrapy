@@ -3,17 +3,21 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27428.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NScrapy.Shell", "NScrapy\NScrapy.Shell.csproj", "{82D908D3-E600-4022-A671-CBA117ADA322}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NScrapy.Shell", "NScrapy\NScrapy.Shell.csproj", "{82D908D3-E600-4022-A671-CBA117ADA322}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NScrapy.Spider", "NScrapy.Spider\NScrapy.Spider.csproj", "{4F11A324-A306-4FFF-9DD2-5B33C57FF1C1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NScrapy.Spider", "NScrapy.Spider\NScrapy.Spider.csproj", "{4F11A324-A306-4FFF-9DD2-5B33C57FF1C1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NScrapy.Engine", "NScrapy.Engine\NScrapy.Engine.csproj", "{31E2FDF8-3FC8-4799-B29A-E769EAD55D31}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NScrapy.Engine", "NScrapy.Engine\NScrapy.Engine.csproj", "{31E2FDF8-3FC8-4799-B29A-E769EAD55D31}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NScrapy.Downloader", "NScrapy.Downloader\NScrapy.Downloader.csproj", "{3EE33694-A8DA-48CB-A06C-404B1B3C83A2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NScrapy.Downloader", "NScrapy.Downloader\NScrapy.Downloader.csproj", "{3EE33694-A8DA-48CB-A06C-404B1B3C83A2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NScrapy.Test", "NScrapy.Test\NScrapy.Test.csproj", "{F3050646-4F3D-40AF-8A6E-5F0ABC148F42}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NScrapy.Test", "NScrapy.Test\NScrapy.Test.csproj", "{F3050646-4F3D-40AF-8A6E-5F0ABC148F42}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NScrapy.Infra", "NScrapy.Infra\NScrapy.Infra.csproj", "{99788DDB-3D0F-46C3-9ECE-14EA3232B331}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NScrapy.Infra", "NScrapy.Infra\NScrapy.Infra.csproj", "{99788DDB-3D0F-46C3-9ECE-14EA3232B331}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NScrapy.Project", "NScrapy.Project\NScrapy.Project.csproj", "{6A0127CE-F4B3-47B1-8163-6434A6308C15}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NScrapy.Scheduler", "NScrapy.Scheduler\NScrapy.Scheduler.csproj", "{7A798D36-A9F0-434B-8670-12D330DA93A6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -45,6 +49,14 @@ Global
 		{99788DDB-3D0F-46C3-9ECE-14EA3232B331}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{99788DDB-3D0F-46C3-9ECE-14EA3232B331}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{99788DDB-3D0F-46C3-9ECE-14EA3232B331}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6A0127CE-F4B3-47B1-8163-6434A6308C15}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6A0127CE-F4B3-47B1-8163-6434A6308C15}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6A0127CE-F4B3-47B1-8163-6434A6308C15}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6A0127CE-F4B3-47B1-8163-6434A6308C15}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7A798D36-A9F0-434B-8670-12D330DA93A6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7A798D36-A9F0-434B-8670-12D330DA93A6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7A798D36-A9F0-434B-8670-12D330DA93A6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7A798D36-A9F0-434B-8670-12D330DA93A6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

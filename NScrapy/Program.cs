@@ -6,7 +6,7 @@ namespace NScrapy
     {
         static void Main(string[] args)
         {
-            var shell = Shell.Scrapy.GetInstance();
+            var shell = Shell.NScrapy.GetInstance();
             var response=shell.Crawl("Linkedin");
         }
     }

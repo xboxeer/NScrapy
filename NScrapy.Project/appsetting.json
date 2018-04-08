@@ -1,0 +1,6 @@
+﻿{
+  "AppSettings": {
+    "SpiderEngine": "MockEngine",
+    "SpiderProject": "NScrapy.Project"
+  }
+}

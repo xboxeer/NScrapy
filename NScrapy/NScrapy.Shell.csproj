@@ -1,19 +1,23 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
+    <OutputType>Library</OutputType>
     <TargetFramework>netcoreapp2.0</TargetFramework>
     <AssemblyName>NScrapy.Shell</AssemblyName>
     <RootNamespace>NScrapy.Shell</RootNamespace>
+    <ApplicationIcon />
+    <StartupObject />
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\NScrapy.Infra\NScrapy.Infra.csproj" />
-    <ProjectReference Include="..\NScrapy.Spider\NScrapy.Spider.csproj" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.0.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Downloader\" />
+    <ProjectReference Include="..\NScrapy.Engine\NScrapy.Engine.csproj" />
+    <ProjectReference Include="..\NScrapy.Infra\NScrapy.Infra.csproj" />
+    <ProjectReference Include="..\NScrapy.Scheduler\NScrapy.Scheduler.csproj" />
+    <ProjectReference Include="..\NScrapy.Spider\NScrapy.Spider.csproj" />
   </ItemGroup>
 
 </Project>

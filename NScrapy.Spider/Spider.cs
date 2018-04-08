@@ -8,6 +8,17 @@ namespace NScrapy.Spider
 {
     public abstract class Spider
     {
-        public abstract IResponse StartRequests();
+        public List<string> URLs { get; set; }
+
+        public async virtual void StartRequests()
+        {
+            
+            throw new NotImplementedException();
+        }
+
+        public virtual IResponse  ResponseHandler(IResponse response)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
