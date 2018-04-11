@@ -7,5 +7,6 @@ namespace NScrapy.Infra
     public interface IRequest
     {
         string URL { get; set; }
+        
     }
 }

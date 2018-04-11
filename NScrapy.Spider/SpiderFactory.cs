@@ -6,6 +6,7 @@ using System.IO;
 using System.Reflection;
 using System.Linq;
 using NScrapy.Infra.Attributes.SpiderAttributes;
+using NScrapy.Infra;
 
 namespace NScrapy.Spider
 {
@@ -13,14 +14,10 @@ namespace NScrapy.Spider
     {
         static AppDomain currentApp = System.AppDomain.CurrentDomain;
         static Assembly spiderProjectAssembly = null;
-        static IConfiguration Configuration;
         static string SpiderProjectName = string.Empty;
         static SpiderFactory()
-        {
-            var builder = new ConfigurationBuilder();
-            builder.SetBasePath(Directory.GetCurrentDirectory()).AddJsonFile("appsetting.json");
-            Configuration = builder.Build();
-            SpiderProjectName = Configuration["AppSettings:SpiderProject"];
+        {            
+            SpiderProjectName = NScrapyContext.CurrentContext.Configuration["AppSettings:SpiderProject"];
             spiderProjectAssembly = currentApp.GetAssemblies().Where(assembly => assembly.GetName().Name == SpiderProjectName).FirstOrDefault();            
         }
 

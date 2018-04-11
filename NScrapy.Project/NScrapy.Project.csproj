@@ -17,4 +17,8 @@
     </None>
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="DownloaderMiddleware\" />
+  </ItemGroup>
+
 </Project>

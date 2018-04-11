@@ -10,9 +10,8 @@ namespace NScrapy.Spider
     {
         public List<string> URLs { get; set; }
 
-        public async virtual void StartRequests()
+        public virtual void StartRequests()
         {
-            
             throw new NotImplementedException();
         }
 

@@ -20,4 +20,10 @@
     <ProjectReference Include="..\NScrapy\NScrapy.Shell.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="appsetting.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
