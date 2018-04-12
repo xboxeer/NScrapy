@@ -14,10 +14,10 @@ namespace NScrapy.Downloader
         private static List<Downloader> downloaderPool = new List<Downloader>();
         public static int DownloaderCount { get; private set; }
         public static int DownloaderPoolCapbility { get; set; }
-
-        public DownloaderStatus Status { get; private set; }
         public static List<Downloader> DownloaderPool { get => downloaderPool; }
 
+        public DownloaderStatus Status { get; private set; }
+        public List<IDownloaderMiddleware> Middlewares { get; private set; }
         private HttpClient httpClient = null;        
 
         static Downloader()
@@ -46,19 +46,29 @@ namespace NScrapy.Downloader
         private Downloader()
         {
             httpClient = new HttpClient();
-            var middlewares = NScrapyContext.CurrentContext.Configuration.GetSection("AppSettings:DownloaderMiddlewares").GetChildren();
-            foreach(var middleware in middlewares)
+            var middlewareNames = NScrapyContext.CurrentContext.Configuration.GetSection("AppSettings:DownloaderMiddlewares").GetChildren();
+            Middlewares = new List<IDownloaderMiddleware>();
+            Middlewares.Add(new HttpHeaderMiddleware());
+            //Add Additional Middleware, Remove additional/default Middleware
+            foreach (var middlewareNamePath in middlewareNames)
             {
-                var path =$"{middleware.Path}:Middleware";
+                var path =$"{middlewareNamePath.Path}:Middleware";
                 var middlewareName = NScrapyContext.CurrentContext.Configuration[path];
                 //Init middlewareName here
-            }            
+                //TODO:Remove Middleware from Middleware list by searching by RemovedMiddleware
+            }
+
         }
 
         public async Task<IResponse> DownloadPageAsync(IRequest request)
         {
             this.Status = DownloaderStatus.Running;
-            HttpResponseMessage responseMessage = null;
+            request.Client = this.httpClient;
+            HttpResponseMessage responseMessage = null;            
+            foreach(var middleware in this.Middlewares)
+            {
+                middleware.PreDownload(request);
+            }
             try
             {
                  responseMessage = await this.httpClient.GetAsync(request.URL);
@@ -67,12 +77,16 @@ namespace NScrapy.Downloader
             {
                 this.Status = DownloaderStatus.Idle;
             }
-                var response = new HttpResponse()
-                {
-                    Request = request,
-                    ResponseMessage = responseMessage,
-                    URL = request.URL
-                };
+            var response = new HttpResponse()
+            {
+                Request = request,
+                ResponseMessage = responseMessage,
+                URL = request.URL
+            };
+            foreach (var middleware in this.Middlewares)
+            {
+                middleware.PostDownload(response);
+            }
             return response;
         }
 
@@ -96,7 +110,7 @@ namespace NScrapy.Downloader
                     downloader = Downloader.DownloaderPool.Where(d => d.Status == DownloaderStatus.Idle).FirstOrDefault();
                     if(downloader==null)
                     {
-                        Thread.Sleep(1000);
+                        Thread.Sleep(100);
                     }
                 }
             }
