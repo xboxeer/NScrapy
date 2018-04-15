@@ -11,6 +11,7 @@ namespace NScrapy.Infra
     {
         public string URL { get ; set ; }
         public IRequest Request { get ; set; }
-        public HttpResponseMessage ResponseMessage { get; set; }
+        public HttpResponseMessage RawResponseMessage { get; set; }
+        public string ReponsePlanText { get; set; }
     }
 }

@@ -49,6 +49,7 @@ namespace NScrapy.Downloader
             var middlewareNames = NScrapyContext.CurrentContext.Configuration.GetSection("AppSettings:DownloaderMiddlewares").GetChildren();
             Middlewares = new List<IDownloaderMiddleware>();
             Middlewares.Add(new HttpHeaderMiddleware());
+            Middlewares.Add(new HttpDecompressionMiddleware());
             //Add Additional Middleware, Remove additional/default Middleware
             foreach (var middlewareNamePath in middlewareNames)
             {
@@ -80,7 +81,7 @@ namespace NScrapy.Downloader
             var response = new HttpResponse()
             {
                 Request = request,
-                ResponseMessage = responseMessage,
+                RawResponseMessage = responseMessage,
                 URL = request.URL
             };
             foreach (var middleware in this.Middlewares)

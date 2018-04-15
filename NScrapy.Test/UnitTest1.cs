@@ -2,6 +2,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NScrapy.Infra;
 using NScrapy.Shell;
 using System.Diagnostics;
+using System.Text;
 
 namespace NScrapy.Test
 {
@@ -51,7 +52,8 @@ namespace NScrapy.Test
             var response3 = Downloader.Downloader.SendRequestAsync(request3);
             var response4 = Downloader.Downloader.SendRequestAsync(request4);
             var response5 = Downloader.Downloader.SendRequestAsync(request5);
-            var result = response5.Result;
+            var result = response5.Result.ReponsePlanText;
+            //var html= Encoding.UTF8.GetString(Encoding.GetEncoding("ISO-8859-1").GetBytes(result.ResponseMessage.Content.ReadAsStringAsync().Result));
             sw.Stop();
             var timeCost = sw.ElapsedMilliseconds;
             return;

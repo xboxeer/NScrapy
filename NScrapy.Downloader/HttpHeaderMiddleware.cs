@@ -3,20 +3,15 @@ using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
+using System.Linq;
+using System.IO;
+using System.IO.Compression;
 
 namespace NScrapy.Downloader
 {
-    public class HttpHeaderMiddleware : IDownloaderMiddleware
-    {
-        
-        public virtual void PostDownload(IResponse response)
-        {
-            //nothing to do then direct return 
-            //throw new NotImplementedException();
-            return;
-        }
-
-        public virtual void PreDownload(IRequest request)
+    public class HttpHeaderMiddleware : EmptyDownloaderMiddleware
+    {            
+        public override void PreDownload(IRequest request)
         {
             var client = request.Client;
             SetHeaderFromConfig(client);
@@ -32,7 +27,7 @@ namespace NScrapy.Downloader
             }
             else
             {
-                client.DefaultRequestHeaders.Add("Accept", @"text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8");
+                client.DefaultRequestHeaders.Add("Accept", @"text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,charset=utf-8");
             }
 
             var acceptEncoding= NScrapy.Infra.NScrapyContext.CurrentContext.Configuration["AppSettings:HttpHeader:Accept-Encoding"];
@@ -48,11 +43,11 @@ namespace NScrapy.Downloader
             var acceptLanguage = NScrapy.Infra.NScrapyContext.CurrentContext.Configuration["AppSettings:HttpHeader:Accept-Language"];
             if (!string.IsNullOrEmpty(acceptLanguage))
             {
-                client.DefaultRequestHeaders.Add("Accept-Encoding", acceptLanguage);
+                client.DefaultRequestHeaders.Add("Accept-Language", acceptLanguage);
             }
             else
             {
-                client.DefaultRequestHeaders.Add("Accept-Encoding", "zh-CN,zh;q=0.9,en;q=0.8");
+                client.DefaultRequestHeaders.Add("Accept-Language", "zh-CN,zh;q=0.9,en;q=0.8");
             }
 
             var userAgent = NScrapy.Infra.NScrapyContext.CurrentContext.Configuration["AppSettings:HttpHeader:User-Agent"];
@@ -65,5 +60,8 @@ namespace NScrapy.Downloader
                 client.DefaultRequestHeaders.Add("User-Agent", @"Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.186 Safari/537.36");
             }
         }
+
     }
+
+    
 }
