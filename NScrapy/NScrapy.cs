@@ -83,10 +83,22 @@ namespace NScrapy.Shell
         public void Crawl(string spiderName)
         {
             var spider = Spider.SpiderFactory.GetSpider(spiderName);
+            NScrapyContext.CurrentContext.CurrentSpider = spider;
             spider.StartRequests();
             while(true)
             {
             }
+        }
+
+        public void Request(string url,Func<IResponse,IResponse> responseHandler)
+        {
+            var request = new HttpRequest()
+            {
+                URL = url,
+                Callback = responseHandler,
+                RequestSpider= NScrapyContext.CurrentContext.CurrentSpider
+            };
+            Scheduler.Scheduler.SendRequestToReceiver(request);
         }
     }
 }

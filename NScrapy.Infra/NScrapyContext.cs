@@ -13,6 +13,7 @@ namespace NScrapy.Infra
         public static NScrapyContext CurrentContext { get; private set; }
         private static NScrapyContext _instance = null;
         public IConfiguration Configuration { get; private set; }
+        public ISpider CurrentSpider { get; set; }
         private NScrapyContext()
         {
             var builder = new ConfigurationBuilder();

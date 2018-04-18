@@ -33,9 +33,15 @@ namespace NScrapy.Scheduler
                     if (responseQueue.Count > 0)
                     {
                         var response = responseQueue.Dequeue();
-                        var spider = response.Request.RequestSpider;
-                        spider.ResponseHandler(response);
-                        //Put Response to ResponseProcessor
+                        var callBack = response.Request.Callback;
+                        if (callBack == null)
+                        {
+                            response.Request.RequestSpider.ResponseHandler(response);
+                        }
+                        else
+                        {
+                            response.Request.Callback(response);
+                        }
                     }
                 }
             }

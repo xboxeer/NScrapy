@@ -75,12 +75,17 @@ namespace NScrapy.Test
     {
         public override IResponse ResponseHandler(IResponse response)
         {
-            var doc = new HtmlDocument();
-            doc.LoadHtml(response.ReponsePlanText);
-            var result = doc.DocumentNode.Descendants("input");
-            return null;
+            var httpResponse = response as HttpResponse;
+            var returnValue = response.CssSelector(".job-info h3 a");
+            NScrapy.Shell.NScrapy.GetInstance().Request("https://www.liepin.com/zhaopin/?d_sfrom=search_fp_nvbar&init=2", Parse);
+            return returnValue;
             //var parser = new HtmlParser();
             //var result=parser.Parse(response.ReponsePlanText);
+        }
+
+        public IResponse Parse(IResponse response)
+        {
+            return response.CssSelector(".job-info h3 a");
         }
     }
 }

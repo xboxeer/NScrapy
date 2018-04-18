@@ -10,5 +10,6 @@ namespace NScrapy.Infra
         string URL { get; set; }
         HttpClient Client { get; set; }
         ISpider RequestSpider { get; set; }
+        Func<IResponse, IResponse> Callback { get; set; }
     }
 }
