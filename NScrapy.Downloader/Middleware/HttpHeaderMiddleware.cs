@@ -7,7 +7,7 @@ using System.Linq;
 using System.IO;
 using System.IO.Compression;
 
-namespace NScrapy.Downloader
+namespace NScrapy.Downloader.Middleware
 {
     public class HttpHeaderMiddleware : EmptyDownloaderMiddleware
     {            

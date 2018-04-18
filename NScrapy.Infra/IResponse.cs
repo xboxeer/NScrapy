@@ -11,5 +11,7 @@ namespace NScrapy.Infra
         IRequest Request { get; set; }
         HttpResponseMessage RawResponseMessage { get; set; }
         string ReponsePlanText { get; set; }
+        IResponse CssSelector(string selector);
+        IResponse XPathSelector(string xpath);
     }
 }

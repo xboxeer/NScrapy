@@ -1,7 +1,9 @@
 ﻿using Microsoft.Extensions.Configuration;
 using NScrapy.Infra;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 
 namespace NScrapy.Infra
 {
@@ -27,6 +29,6 @@ namespace NScrapy.Infra
             CurrentContext = _instance;
             return _instance;
         }
-      
+        
     }
 }

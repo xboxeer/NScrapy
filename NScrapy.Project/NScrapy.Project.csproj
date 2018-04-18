@@ -21,4 +21,8 @@
     <Folder Include="DownloaderMiddleware\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="HtmlAgilityPack" Version="1.8.0" />
+  </ItemGroup>
+
 </Project>

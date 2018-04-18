@@ -6,6 +6,8 @@ using NScrapy.Engine;
 using NScrapy.Infra;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
+using System.Threading.Tasks;
+using System.Threading;
 
 namespace NScrapy.Shell
 {
@@ -28,6 +30,7 @@ namespace NScrapy.Shell
             this._context = NScrapyContext.GetInstance();
             this._context.CurrentEngine = this._provider.GetService<IEngine>();
             Scheduler.RequestReceiver.StartReceiver();
+            Scheduler.ResponseDistributer.StartDistribuiter();
         }
 
         public static NScrapy GetInstance()
@@ -77,18 +80,13 @@ namespace NScrapy.Shell
             return engineType;
         }
 
-        public IResponse Crawl(string spiderName)
+        public void Crawl(string spiderName)
         {
             var spider = Spider.SpiderFactory.GetSpider(spiderName);
-            foreach(var url in spider.URLs)
+            spider.StartRequests();
+            while(true)
             {
-                HttpRequest request = new HttpRequest()
-                {
-                    URL = url
-                };
-                Scheduler.Scheduler.SendRequestToReceiver(request);
             }
-            return null;
         }
     }
 }

@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using NScrapy.Downloader.Middleware;
 
 namespace NScrapy.Downloader
 {
@@ -95,7 +96,6 @@ namespace NScrapy.Downloader
         {            
             var downloader = GetDownloader();
             return await downloader.DownloadPageAsync(request);
-            //Put request into internal queue            
         }
         /// <summary>
         /// This method is thread safe to make sure no 2 requests will reference one downloader

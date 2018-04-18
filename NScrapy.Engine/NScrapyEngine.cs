@@ -3,6 +3,7 @@ using System;
 using System.Threading;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace NScrapy.Engine
 {
@@ -11,11 +12,20 @@ namespace NScrapy.Engine
         public IResponse ProcessRequest(IRequest request)
         {
             //Put request to Downloader pool
-            var response=Downloader.Downloader.SendRequestAsync(request);
+
             //Waiting for Downloader Complete
             //Once Completed, send response to ReponseDistributer
 
+            //return response;
             throw new NotImplementedException();
         }
+
+
+        public async Task<IResponse> ProcessRequestAsync(IRequest request)
+        {
+            var response = await Downloader.Downloader.SendRequestAsync(request);
+            return response;
+        }
+
     }
 }

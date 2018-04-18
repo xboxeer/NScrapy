@@ -10,6 +10,7 @@ namespace NScrapy.Scheduler
     {
         private static Queue<IRequest> queue = new Queue<IRequest>();
         private static object lockObj = new object();
+        public const string REQUESTTHREADNAME = "ReceiverThread";
         public static Queue<IRequest> RequestQueue
         {
             get { return queue; }
@@ -20,7 +21,7 @@ namespace NScrapy.Scheduler
             {
                 Name = "ReceiverThread"
             };
-            thread.Start();
+            thread.Start();           
         }
 
         private static void ListenToQueue()
@@ -32,7 +33,8 @@ namespace NScrapy.Scheduler
                     if (queue.Count > 0)
                     {
                         var request = queue.Dequeue();
-                        NScrapyContext.CurrentContext.CurrentEngine.ProcessRequest(request);
+                        var result =  NScrapyContext.CurrentContext.CurrentEngine.ProcessRequestAsync(request);
+                        result.ContinueWith(u => Scheduler.SendResponseToDistributer(u.Result));                        
                     }
                 }
             }

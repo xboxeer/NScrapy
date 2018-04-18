@@ -30,15 +30,17 @@ namespace NScrapy.Spider
                 var types = spiderProjectAssembly.ExportedTypes;
                 foreach(var type in types)
                 {
-                    var nameAttr = type.GetCustomAttribute(typeof(NameAttribute)) as NameAttribute;
-                    if(name==null)
+                    if (type.GetCustomAttribute(typeof(NameAttribute)) is NameAttribute nameAttr)
                     {
-                        continue;
-                    }
-                    if(name==nameAttr.Name && type.GetTypeInfo().IsSubclassOf(typeof(Spider)))
-                    {
-                        spiderType = type;
-                        break;
+                        if (name == null)
+                        {
+                            continue;
+                        }
+                        if (name == nameAttr.Name && type.GetTypeInfo().IsSubclassOf(typeof(Spider)))
+                        {
+                            spiderType = type;
+                            break;
+                        }
                     }
                 }
             }

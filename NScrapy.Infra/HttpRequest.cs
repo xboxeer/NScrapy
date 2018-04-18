@@ -11,5 +11,6 @@ namespace NScrapy.Infra
     {
         public string URL { get; set ; }
         public HttpClient Client { get; set; }
+        public ISpider RequestSpider { get; set; }
     }
 }

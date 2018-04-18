@@ -6,18 +6,23 @@ using System.Text;
 
 namespace NScrapy.Spider
 {
-    public abstract class Spider
+    public abstract class Spider:ISpider
     {
-        public List<string> URLs { get; set; }
+        public List<string> URLs { get; set; }        
 
         public virtual void StartRequests()
         {
-            throw new NotImplementedException();
+            foreach (var url in this.URLs)
+            {
+                HttpRequest request = new HttpRequest()
+                {
+                    URL = url,
+                    RequestSpider = this
+                };
+                Scheduler.Scheduler.SendRequestToReceiver(request);
+            }
         }
 
-        public virtual IResponse  ResponseHandler(IResponse response)
-        {
-            throw new NotImplementedException();
-        }
+        public abstract IResponse ResponseHandler(IResponse response);
     }
 }

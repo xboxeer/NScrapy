@@ -1,8 +1,11 @@
+using HtmlAgilityPack;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NScrapy.Infra;
+using NScrapy.Infra.Attributes.SpiderAttributes;
 using NScrapy.Shell;
 using System.Diagnostics;
 using System.Text;
+using System.Threading;
 
 namespace NScrapy.Test
 {
@@ -57,6 +60,27 @@ namespace NScrapy.Test
             sw.Stop();
             var timeCost = sw.ElapsedMilliseconds;
             return;
+        }
+
+        [TestMethod]
+        public void SpiderTest()
+        {
+            Shell.NScrapy.GetInstance().Crawl("JobSpider");
+        }
+    }
+
+    [Name(Name = "JobSpider")]
+    [URL("https://www.liepin.com/zhaopin/?d_sfrom=search_fp_nvbar&init=1")]
+    public class JobSpider : Spider.Spider
+    {
+        public override IResponse ResponseHandler(IResponse response)
+        {
+            var doc = new HtmlDocument();
+            doc.LoadHtml(response.ReponsePlanText);
+            var result = doc.DocumentNode.Descendants("input");
+            return null;
+            //var parser = new HtmlParser();
+            //var result=parser.Parse(response.ReponsePlanText);
         }
     }
 }

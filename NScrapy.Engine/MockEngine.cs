@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace NScrapy.Engine
 {
@@ -14,5 +15,11 @@ namespace NScrapy.Engine
             Console.Read();
             return null;
         }
+
+        public Task<IResponse> ProcessRequestAsync(IRequest request)
+        {
+            throw new NotImplementedException();
+        }
+
     }
 }
