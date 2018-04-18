@@ -21,7 +21,7 @@ namespace NScrapy.Infra
             HtmlDocument doc = new HtmlDocument();
             doc.LoadHtml(this.ReponsePlanText);
             doc.QuerySelectorAll(selector);
-            throw new NotImplementedException()；
+            throw new NotImplementedException();
         }
 
         public IResponse XPathSelector(string xpath)
