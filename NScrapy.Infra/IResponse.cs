@@ -13,5 +13,7 @@ namespace NScrapy.Infra
         string ReponsePlanText { get; set; }
         IResponse CssSelector(string selector);
         IResponse XPathSelector(string xpath);
+        IEnumerable<string> Extract();
+        string ExtractFirst();
     }
 }

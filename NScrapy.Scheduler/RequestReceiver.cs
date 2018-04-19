@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace NScrapy.Scheduler
 {
@@ -32,9 +33,9 @@ namespace NScrapy.Scheduler
                 {
                     if (queue.Count > 0)
                     {
-                        var request = queue.Dequeue();
+                        var request = queue.Dequeue();                        
                         var result =  NScrapyContext.CurrentContext.CurrentEngine.ProcessRequestAsync(request);
-                        result.ContinueWith(u => Scheduler.SendResponseToDistributer(u.Result));                        
+                        result.ContinueWith(u => Scheduler.SendResponseToDistributer(u.Result), TaskContinuationOptions.OnlyOnRanToCompletion);                        
                     }
                 }
             }

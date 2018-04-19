@@ -76,16 +76,20 @@ namespace NScrapy.Test
         public override IResponse ResponseHandler(IResponse response)
         {
             var httpResponse = response as HttpResponse;
-            var returnValue = response.CssSelector(".job-info h3 a");
-            NScrapy.Shell.NScrapy.GetInstance().Request("https://www.liepin.com/zhaopin/?d_sfrom=search_fp_nvbar&init=2", Parse);
+            var returnValue = response.CssSelector(".job-info h3 a::attr(href)") as HttpResponse;
+            var hrefs = returnValue.Extract();
+            foreach(var href in hrefs)
+            {
+                NScrapy.Shell.NScrapy.GetInstance().Request(href, Parse);
+            }            
             return returnValue;
             //var parser = new HtmlParser();
             //var result=parser.Parse(response.ReponsePlanText);
         }
 
-        public IResponse Parse(IResponse response)
+        public void Parse(IResponse response)
         {
-            return response.CssSelector(".job-info h3 a");
+            response.CssSelector(".job-info h3 a");
         }
     }
 }

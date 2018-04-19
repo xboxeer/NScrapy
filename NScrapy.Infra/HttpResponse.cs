@@ -27,11 +27,12 @@ namespace NScrapy.Infra
                 doc.LoadHtml(value);
             }
         }       
-        public Func<IResponse, IResponse> Callback { get; set; }
+        public Action<IResponse> Callback { get; set; }
         
         public HtmlDocument doc = new HtmlDocument();
         private StringBuilder strBuilder = new StringBuilder();
         private string reponsePlanText = string.Empty;
+        private string attr = string.Empty;
         public HttpResponse()
         {
             
@@ -43,8 +44,15 @@ namespace NScrapy.Infra
         /// <returns></returns>
         public IResponse CssSelector(string selector)
         {
-            //var cssSelectorReg = new Regex(@"[\s\S]+(?=::attr)");
-            //var groups = cssSelectorReg.Match(selector);
+            
+            var attrReg = new Regex(@"(?<=::attr\()[^()]*(?=\))");
+            var attrMatch = attrReg.Match(selector);
+            if(attrMatch.Success)
+            {
+                attr = attrMatch.Value;
+                //if matches  .job-info h3 a::attr(href), remove ::attr(href)
+                selector = selector.Replace($"::attr({attr})","");
+            }
             doc.LoadHtml(this.ReponsePlanText);
             var elements=doc.QuerySelectorAll(selector);
             return this.CreateFilteredResponse(elements);
@@ -58,14 +66,40 @@ namespace NScrapy.Infra
             throw new NotImplementedException();
         }
 
-        public List<string> Extract()
+        public IEnumerable<string> Extract()
         {
             var returnValue = new List<string>();
+            var attrValueRegPattern = string.Empty;
+            if(attr!=string.Empty)
+            {
+                attrValueRegPattern = $"(?<={attr}=\\s*['\"]+)[^'\"]*(?=['\"]+)";
+            }
             foreach(var item in doc.DocumentNode.ChildNodes)
             {
-                returnValue.Add(item.OuterHtml);
+                if(item.OuterHtml==string.Empty||
+                    item.OuterHtml==System.Environment.NewLine)
+                {
+                    continue;
+                }
+                if (attr == string.Empty)
+                {                     
+                    yield return item.OuterHtml;
+                }
+                else if(attr=="text")
+                {
+                    yield return item.InnerText;
+                }
+                else
+                {
+                    var attrValueMatch = new Regex(attrValueRegPattern);
+                    yield return attrValueMatch.Match(item.OuterHtml).Value;
+                }
             }
-            return returnValue;
+        }
+
+        public string ExtractFirst()
+        {
+            return this.Extract().FirstOrDefault();
         }
 
         private HttpResponse CreateFilteredResponse(IList<HtmlNode> elements)
@@ -80,10 +114,12 @@ namespace NScrapy.Infra
                 RawResponseMessage = this.RawResponseMessage,
                 ReponsePlanText = strBuilder.ToString(),
                 Request = this.Request,
-                URL = this.URL
+                URL = this.URL                
             };
+            returnValue.attr = this.attr;
             strBuilder.Clear();
             return returnValue;
         }
+
     }
 }

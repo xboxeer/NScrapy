@@ -90,13 +90,25 @@ namespace NScrapy.Shell
             }
         }
 
-        public void Request(string url,Func<IResponse,IResponse> responseHandler)
+        public void Request(string url,Action<IResponse> responseHandler)
         {
             var request = new HttpRequest()
             {
                 URL = url,
                 Callback = responseHandler,
                 RequestSpider= NScrapyContext.CurrentContext.CurrentSpider
+            };
+            Scheduler.Scheduler.SendRequestToReceiver(request);
+        }
+
+        public void Follow(IResponse sourceResponse, string url,Action<IResponse> responseHandler)
+        {
+            var uri = new Uri(sourceResponse.Request.URL);
+            var request = new HttpRequest()
+            {
+                URL =$"{uri.Scheme}://{uri.Host}{url}",
+                Callback = responseHandler,
+                RequestSpider = NScrapyContext.CurrentContext.CurrentSpider
             };
             Scheduler.Scheduler.SendRequestToReceiver(request);
         }
