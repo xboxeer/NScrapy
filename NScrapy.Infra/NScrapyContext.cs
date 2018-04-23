@@ -31,5 +31,16 @@ namespace NScrapy.Infra
             return _instance;
         }
         
+        public  void RefreshConfigFile(string path="")
+        {
+            var configFile = path;
+            if(string.IsNullOrEmpty(configFile))
+            {
+                configFile = "appsetting.json";
+            }
+            var builder = new ConfigurationBuilder();
+            builder.SetBasePath(Directory.GetCurrentDirectory()).AddJsonFile(path);
+            Configuration = builder.Build();
+        }
     }
 }

@@ -3,7 +3,7 @@
     "DownloaderPoolCapbility": 4,
     "DownloaderMiddlewares": [
       {
-        "Middleware": "HttpUserAgentPoolMiddleware"
+        "Middleware": "NScrapy.Downloader.Middleware.HttpUserAgentPoolMiddleware"
       },
       {
         "RemovedMiddleware": "test3"

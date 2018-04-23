@@ -29,7 +29,7 @@ namespace NScrapy.Test
             var sw=Stopwatch.StartNew();
             sw.Start();
             //init context
-            NScrapy.Shell.NScrapy scrapy = NScrapy.Shell.NScrapy.GetInstance();
+            Shell.NScrapy scrapy = NScrapy.Shell.NScrapy.GetInstance();
             var request = new HttpRequest()
             {
                 URL = "http://www.sina.com"
@@ -66,6 +66,19 @@ namespace NScrapy.Test
         public void SpiderTest()
         {
             Shell.NScrapy.GetInstance().Crawl("JobSpider");
+        }
+
+        [TestMethod]
+        public void UserAgentMiddlewareTest()
+        {
+            Shell.NScrapy scrapy = NScrapy.Shell.NScrapy.GetInstance();
+            NScrapyContext.CurrentContext.RefreshConfigFile("appsettingUserAgent.json");
+            var request = new HttpRequest()
+            {
+                URL = "http://www.sina.com"
+            };
+            var response = Downloader.Downloader.SendRequestAsync(request);
+            Assert.IsTrue(response.Result != null);
         }
     }
 

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using NScrapy.Downloader.Middleware;
+using System.Reflection;
 
 namespace NScrapy.Downloader
 {
@@ -13,14 +14,17 @@ namespace NScrapy.Downloader
     {
         private static object lockObj = new object();
         private static List<Downloader> downloaderPool = new List<Downloader>();
+        private static Assembly downloaderAssembly = null;
+        private static Assembly appAssembly = null;
+
         public static int DownloaderCount { get; private set; }
         public static int DownloaderPoolCapbility { get; set; }
         public static List<Downloader> DownloaderPool { get => downloaderPool; }
 
         public DownloaderStatus Status { get; private set; }
         public List<IDownloaderMiddleware> Middlewares { get; private set; }
-        private HttpClient httpClient = null;        
-
+        private HttpClient httpClient = null;
+        
         static Downloader()
         {
             var capbility = NScrapyContext.CurrentContext.Configuration["AppSettings:DownloaderPoolCapbility"];
@@ -42,20 +46,43 @@ namespace NScrapy.Downloader
                 };
                 DownloaderPool.Add(downloader);
             }
+            downloaderAssembly = Assembly.GetExecutingAssembly();
+            appAssembly = Assembly.GetEntryAssembly();
         }
 
         private Downloader()
         {
+            if (downloaderAssembly == null)
+            {
+                downloaderAssembly = Assembly.GetExecutingAssembly();
+            }
+            if(appAssembly==null)
+            {
+                appAssembly = Assembly.GetEntryAssembly();
+            }
             httpClient = new HttpClient();
             var middlewareNames = NScrapyContext.CurrentContext.Configuration.GetSection("AppSettings:DownloaderMiddlewares").GetChildren();
-            Middlewares = new List<IDownloaderMiddleware>();
-            Middlewares.Add(new HttpHeaderMiddleware());
-            Middlewares.Add(new HttpDecompressionMiddleware());
+            Middlewares = new List<IDownloaderMiddleware>
+            {
+                new HttpHeaderMiddleware(),
+                new HttpDecompressionMiddleware()
+            };
             //Add Additional Middleware, Remove additional/default Middleware
             foreach (var middlewareNamePath in middlewareNames)
             {
                 var path =$"{middlewareNamePath.Path}:Middleware";
                 var middlewareName = NScrapyContext.CurrentContext.Configuration[path];
+                if(string.IsNullOrEmpty(middlewareName))
+                {
+                    continue;
+                }
+                var middlewareType = downloaderAssembly.GetType(middlewareName);
+                if(middlewareType==null)
+                {
+                    middlewareType = appAssembly.GetType(middlewareName);
+                }
+                var middleware = Activator.CreateInstance(middlewareType) as IDownloaderMiddleware;
+                Middlewares.Add(middleware);
                 //Init middlewareName here
                 //TODO:Remove Middleware from Middleware list by searching by RemovedMiddleware
             }
