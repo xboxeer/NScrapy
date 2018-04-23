@@ -17,9 +17,8 @@ namespace NScrapy.Downloader.Middleware
             SetHeaderFromConfig(client);
         }
 
-        private void SetHeaderFromConfig(HttpClient client)
+        protected virtual void SetHeaderFromConfig(HttpClient client)
         {
-            //The default header is constructed by a request to www.baidu.com sent by Chrome
             var accept = NScrapy.Infra.NScrapyContext.CurrentContext.Configuration["AppSettings:HttpHeader:Accept"];
             if(!string.IsNullOrEmpty(accept))
             {

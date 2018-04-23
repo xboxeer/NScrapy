@@ -10,7 +10,7 @@ namespace NScrapy.Project
         static void Main(string[] args)
         {
             var shell = NScrapy.Shell.NScrapy.GetInstance();
-            shell.Crawl("PersonSpider");
+            shell.Crawl("JobSpider");
             return;
         }
     }
