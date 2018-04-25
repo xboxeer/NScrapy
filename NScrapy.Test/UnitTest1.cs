@@ -26,7 +26,7 @@ namespace NScrapy.Test
         [TestMethod]
         public void ConstructDownloader()
         {
-            var sw=Stopwatch.StartNew();
+            var sw = Stopwatch.StartNew();
             sw.Start();
             //init context
             Shell.NScrapy scrapy = NScrapy.Shell.NScrapy.GetInstance();
@@ -78,7 +78,13 @@ namespace NScrapy.Test
                 URL = "http://www.sina.com"
             };
             var response = Downloader.Downloader.SendRequestAsync(request);
-            Assert.IsTrue(response.Result != null);
+            Assert.IsTrue(response.Result.ReponsePlanText != null);
+        }
+
+        [TestMethod]
+        public void ImageSpiderTest()
+        {
+
         }
     }
 
@@ -86,16 +92,15 @@ namespace NScrapy.Test
     [URL("https://www.liepin.com/zhaopin/?d_sfrom=search_fp_nvbar&init=1")]
     public class JobSpider : Spider.Spider
     {
-        public override IResponse ResponseHandler(IResponse response)
+        public override void ResponseHandler(IResponse response)
         {
             var httpResponse = response as HttpResponse;
             var returnValue = response.CssSelector(".job-info h3 a::attr(href)") as HttpResponse;
             var hrefs = returnValue.Extract();
-            foreach(var href in hrefs)
+            foreach (var href in hrefs)
             {
                 NScrapy.Shell.NScrapy.GetInstance().Request(href, Parse);
-            }            
-            return returnValue;
+            }
             //var parser = new HtmlParser();
             //var result=parser.Parse(response.ReponsePlanText);
         }
@@ -103,6 +108,16 @@ namespace NScrapy.Test
         public void Parse(IResponse response)
         {
             response.CssSelector(".job-info h3 a");
+        }
+    }
+
+    [Name(Name = "ImageSpider")]
+    [URL("http://img.yinyuezj.com/uploads/allimg/160307/1-16030H14G4.jpg")]
+    public class ImageSpider : Spider.Spider
+    {
+        public override void ResponseHandler(IResponse response)
+        {
+            throw new System.NotImplementedException();
         }
     }
 }

@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <Folder Include="DownloaderMiddleware\" />
+    <Folder Include="Spiders\" />
   </ItemGroup>
 
   <ItemGroup>

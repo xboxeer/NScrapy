@@ -81,6 +81,10 @@ namespace NScrapy.Downloader
                 {
                     middlewareType = appAssembly.GetType(middlewareName);
                 }
+                if(middlewareType==null)
+                {
+                    throw new ArgumentNullException($"NScrapy can not find DownloaderMiddleware {middlewareName}");
+                }
                 var middleware = Activator.CreateInstance(middlewareType) as IDownloaderMiddleware;
                 Middlewares.Add(middleware);
                 //Init middlewareName here

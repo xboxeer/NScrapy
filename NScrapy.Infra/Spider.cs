@@ -12,7 +12,7 @@ namespace NScrapy.Infra
 
         void StartRequests();
 
-        IResponse ResponseHandler(IResponse response);
+        void ResponseHandler(IResponse response);
 
     }
 }

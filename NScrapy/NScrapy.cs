@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Threading;
+using System.Text.RegularExpressions;
 
 namespace NScrapy.Shell
 {
@@ -16,6 +17,7 @@ namespace NScrapy.Shell
         private NScrapyContext _context = null;
         private ServiceProvider _provider = null;
         private static NScrapy _instance = null;
+        private Regex urlHostReg = new Regex(@"https?://[/s/S]*[^/]*/");
         public NScrapyContext Context
         {
             get
@@ -82,6 +84,7 @@ namespace NScrapy.Shell
 
         public void Crawl(string spiderName)
         {
+            NScrapyContext.CurrentContext.Log.Info($"Start Crawling with spider {spiderName}");
             var spider = Spider.SpiderFactory.GetSpider(spiderName);
             NScrapyContext.CurrentContext.CurrentSpider = spider;
             spider.StartRequests();
@@ -92,6 +95,7 @@ namespace NScrapy.Shell
 
         public void Request(string url,Action<IResponse> responseHandler)
         {
+            NScrapyContext.CurrentContext.Log.Info($"Sending Request to {url}");
             var request = new HttpRequest()
             {
                 URL = url,
@@ -103,6 +107,15 @@ namespace NScrapy.Shell
 
         public void Follow(IResponse sourceResponse, string url,Action<IResponse> responseHandler)
         {
+            //Replace uri.Schema and uri.host incase the url already have those inforamtion
+            url = urlHostReg.Replace(url, "");
+            //if the url comes in like /a/1234, then nothing changes
+            //if the url comes in like http://www.baidu.com/a/1234, then it becomes a/1234
+            //so basiclly the url should becomes like /a/1234
+            if (url.Length > 0 && !url.StartsWith("/"))
+            {
+                url = "/" + url;
+            }
             var uri = new Uri(sourceResponse.Request.URL);
             var request = new HttpRequest()
             {

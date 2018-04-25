@@ -33,6 +33,10 @@ namespace NScrapy.Scheduler
                     if (responseQueue.Count > 0)
                     {
                         var response = responseQueue.Dequeue();
+                        if (response == null)
+                        {
+                            continue;
+                        }
                         var callBack = response.Request.Callback;
                         if (callBack == null)
                         {

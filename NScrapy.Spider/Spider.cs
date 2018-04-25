@@ -23,6 +23,6 @@ namespace NScrapy.Spider
             }
         }
 
-        public abstract IResponse ResponseHandler(IResponse response);
+        public abstract void ResponseHandler(IResponse response);
     }
 }

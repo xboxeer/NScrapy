@@ -27,15 +27,21 @@ namespace NScrapy.Scheduler
 
         private static void ListenToQueue()
         {
-            while(true)
+            while (true)
             {
                 lock (lockObj)
                 {
                     if (queue.Count > 0)
                     {
-                        var request = queue.Dequeue();                        
-                        var result =  NScrapyContext.CurrentContext.CurrentEngine.ProcessRequestAsync(request);
-                        result.ContinueWith(u => Scheduler.SendResponseToDistributer(u.Result), TaskContinuationOptions.OnlyOnRanToCompletion);                        
+                        var request = queue.Dequeue();
+                        var result = NScrapyContext.CurrentContext.CurrentEngine.ProcessRequestAsync(request);
+                        result.ContinueWith(u =>
+                        {
+                            Scheduler.SendResponseToDistributer(u.Result);
+                            NScrapyContext.CurrentContext.Log.Info($"Sending request to {request.URL} success!");
+                        },
+                        TaskContinuationOptions.OnlyOnRanToCompletion);
+                        result.ContinueWith(u => NScrapyContext.CurrentContext.Log.Info($"Sending request to {request.URL} failed", result.Exception.InnerException), TaskContinuationOptions.OnlyOnFaulted);
                     }
                 }
             }

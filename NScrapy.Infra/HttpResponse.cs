@@ -40,11 +40,10 @@ namespace NScrapy.Infra
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="selector">selecter sample: .job-info h3 a::attr(href)</param>
+        /// <param name="selector">selecter sample: .class div a::attr(href)</param>
         /// <returns></returns>
         public IResponse CssSelector(string selector)
-        {
-            
+        {            
             var attrReg = new Regex(@"(?<=::attr\()[^()]*(?=\))");
             var attrMatch = attrReg.Match(selector);
             if(attrMatch.Success)
@@ -56,6 +55,20 @@ namespace NScrapy.Infra
             doc.LoadHtml(this.ReponsePlanText);
             var elements=doc.QuerySelectorAll(selector);
             return this.CreateFilteredResponse(elements);
+        }
+
+        public IResponse CssSelector(IEnumerable<string> possableSelector)
+        {
+            IResponse returnValue = null;
+            foreach (var selector in possableSelector)
+            {
+                returnValue = this.CssSelector(selector);
+                if(returnValue.ExtractFirst()!=null)
+                {
+                    break;
+                }
+            }
+            return returnValue;
         }
 
         public IResponse XPathSelector(string xpath)
