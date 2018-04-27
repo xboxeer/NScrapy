@@ -10,15 +10,21 @@ using System.IO.Compression;
 namespace NScrapy.Downloader.Middleware
 {
     public class HttpHeaderMiddleware : EmptyDownloaderMiddleware
-    {            
+    {
+        private bool headerAlreadySet = false;
         public override void PreDownload(IRequest request)
         {
             var client = request.Client;
             SetHeaderFromConfig(client);
+            headerAlreadySet = true;
         }
 
         protected virtual void SetHeaderFromConfig(HttpClient client)
         {
+            if(headerAlreadySet)
+            {
+                return;
+            }
             var accept = NScrapy.Infra.NScrapyContext.CurrentContext.Configuration["AppSettings:HttpHeader:Accept"];
             if(!string.IsNullOrEmpty(accept))
             {

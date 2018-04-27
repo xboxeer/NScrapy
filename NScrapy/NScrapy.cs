@@ -31,6 +31,8 @@ namespace NScrapy.Shell
             ConfigSerivces();
             this._context = NScrapyContext.GetInstance();
             this._context.CurrentEngine = this._provider.GetService<IEngine>();
+            //This is a temp solution, later on we will implement IOC in this place so we can chose other approach to filter the url
+            this._context.UrlFilter = new InMemoryUrlFilter();
             Scheduler.RequestReceiver.StartReceiver();
             Scheduler.ResponseDistributer.StartDistribuiter();
         }

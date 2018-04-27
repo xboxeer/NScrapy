@@ -8,7 +8,8 @@ namespace NScrapy.Spider
 {
     public abstract class Spider:ISpider
     {
-        public List<string> URLs { get; set; }        
+        public List<string> URLs { get; set; }
+        public List<ISpiderMiddleware> Middlewares { get ; set; }
 
         public virtual void StartRequests()
         {

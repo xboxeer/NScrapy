@@ -10,6 +10,8 @@ namespace NScrapy.Infra
     {
         List<string> URLs { get; set; }
 
+        List<ISpiderMiddleware> Middlewares { get; set; }
+
         void StartRequests();
 
         void ResponseHandler(IResponse response);

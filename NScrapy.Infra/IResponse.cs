@@ -16,5 +16,6 @@ namespace NScrapy.Infra
         IResponse XPathSelector(string xpath);
         IEnumerable<string> Extract();
         string ExtractFirst();
+        string ExtractLast();
     }
 }

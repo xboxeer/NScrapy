@@ -134,5 +134,9 @@ namespace NScrapy.Infra
             return returnValue;
         }
 
+        public string ExtractLast()
+        {
+            return this.Extract().LastOrDefault();
+        }
     }
 }

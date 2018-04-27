@@ -86,6 +86,13 @@ namespace NScrapy.Test
         {
 
         }
+
+        [TestMethod]
+        public void UrlFilterTest()
+        {
+            Shell.NScrapy scrapy = NScrapy.Shell.NScrapy.GetInstance();
+            scrapy.Crawl("UrlFilterTestSpider");
+        }
     }
 
     [Name(Name = "JobSpider")]
@@ -111,13 +118,13 @@ namespace NScrapy.Test
         }
     }
 
-    [Name(Name = "ImageSpider")]
-    [URL("http://img.yinyuezj.com/uploads/allimg/160307/1-16030H14G4.jpg")]
+    [Name(Name = "UrlFilterTestSpider")]
+    [URL("https://www.liepin.com/zhaopin/?d_sfrom=search_fp_nvbar&init=1")]
     public class ImageSpider : Spider.Spider
     {
         public override void ResponseHandler(IResponse response)
         {
-            throw new System.NotImplementedException();
+            NScrapy.Shell.NScrapy.GetInstance().Request(response.URL,null);
         }
     }
 }

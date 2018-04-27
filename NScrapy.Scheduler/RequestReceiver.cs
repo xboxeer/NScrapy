@@ -34,7 +34,18 @@ namespace NScrapy.Scheduler
                     if (queue.Count > 0)
                     {
                         var request = queue.Dequeue();
+                        if (request == null)
+                        {
+                            continue;
+                        }
+                        if(NScrapyContext.CurrentContext.UrlFilter.IsUrlVisited(request.URL))
+                        {
+                            NScrapyContext.CurrentContext.Log.Info($"{request.URL} already visited");
+                            continue;                            
+                        }
+                        NScrapyContext.CurrentContext.VisitedUrl++;
                         var result = NScrapyContext.CurrentContext.CurrentEngine.ProcessRequestAsync(request);
+
                         result.ContinueWith(u =>
                         {
                             Scheduler.SendResponseToDistributer(u.Result);

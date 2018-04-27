@@ -51,6 +51,7 @@ namespace NScrapy.Spider
                     if (spiderType.GetCustomAttribute(typeof(URLAttribute)) is URLAttribute urlAttr)
                     {
                         spider.URLs= urlAttr.URLs.ToList();
+                        spider.Middlewares = new List<ISpiderMiddleware>();
                     }
                     return spider;
                 }

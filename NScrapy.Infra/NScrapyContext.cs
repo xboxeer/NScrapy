@@ -15,9 +15,22 @@ namespace NScrapy.Infra
         public IEngine CurrentEngine { get; set; }
         public static NScrapyContext CurrentContext { get; private set; }
         private static NScrapyContext _instance = null;
+
+        private int visitedUrl = 0;
+
         public IConfiguration Configuration { get; private set; }
         public ISpider CurrentSpider { get; set; }
         public ILog Log { get; set; }
+        public IUrlFilter UrlFilter { get; set; }
+        
+        public int VisitedUrl { get {return this.visitedUrl; } set
+            {
+                lock(this.GetType())
+                {
+                    visitedUrl = value;
+                }
+            }
+        }
         private NScrapyContext()
         {
             var builder = new ConfigurationBuilder();
@@ -29,7 +42,7 @@ namespace NScrapy.Infra
             {
                 XmlConfigurator.Configure(Log.Logger.Repository, configStream);
             }
-
+            
         }        
 
         public static NScrapyContext GetInstance()

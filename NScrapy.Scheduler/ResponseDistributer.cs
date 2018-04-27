@@ -38,6 +38,10 @@ namespace NScrapy.Scheduler
                             continue;
                         }
                         var callBack = response.Request.Callback;
+                        foreach(var middleware in response.Request.RequestSpider.Middlewares)
+                        {
+                            middleware.PreResponse(response);
+                        }
                         if (callBack == null)
                         {
                             response.Request.RequestSpider.ResponseHandler(response);
@@ -45,6 +49,10 @@ namespace NScrapy.Scheduler
                         else
                         {
                             response.Request.Callback(response);
+                        }
+                        foreach (var middleware in response.Request.RequestSpider.Middlewares)
+                        {
+                            middleware.PostReponse(response);
                         }
                     }
                 }

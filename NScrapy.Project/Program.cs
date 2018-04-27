@@ -2,7 +2,9 @@
 using NScrapy.Infra.Attributes.SpiderAttributes;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 
 namespace NScrapy.Project
@@ -17,12 +19,14 @@ namespace NScrapy.Project
         }
     }
     [Name(Name = "JobSpider")]
-    [URL("https://www.liepin.com/zhaopin/?industries=&dqs=&salary=&jobKind=&pubTime=&compkind=&compscale=&industryType=&searchType=1&clean_condition=&isAnalysis=&init=1&sortFlag=15&flushckid=0&fromSearchBtn=1&headckid=1773084a3c558acd&d_headId=4999cfe588ed1ed20f0a479b74934008&d_ckId=4999cfe588ed1ed20f0a479b74934008&d_sfrom=search_fp_nvbar&d_curPage=0&d_pageSize=40&siTag=1B2M2Y8AsgTpgAmY7PhCfg~fA9rXquZc5IkJpXC-Ycixw&key=%E8%9E%8D%E8%B5%84%E6%80%BB%E7%9B%91")]
+    [URL("https://www.liepin.com/zhaopin/?ckid=14f634c4f64673b4&fromSearchBtn=2&init=-1&sfrom=click-pc_homepage-centre_searchbox-search_new&flushckid=1&dqs=&key=.net&headckid=46374f76c9769ff7&d_pageSize=40&siTag=LVCXL87NN2EpVFUH8QYgiQ%7Er3i1HcfrfE3VRWBaGW6LoA&d_headId=c84844d2749548903e20ddde1d713d12&d_ckId=7768bacafa68ea7a6181aa2a59daa5cf&d_sfrom=search_fp&d_curPage=0")]
     public class JobSpider : Spider.Spider
     {
         List<string> FirmSelector = new List<string>();
         List<string> SalarySelector = new List<string>();
         List<string> TitleSelector = new List<string>();
+        List<string> TimeSelector = new List<string>();
+        private string startingTime = DateTime.Now.ToString("yyyyMMddhhmm");
         public JobSpider()
         {
             // FirmSelector.Add(".title-info h1::attr(text)");
@@ -38,6 +42,13 @@ namespace NScrapy.Project
             SalarySelector.Add(".job-main-title strong::attr(text)");
             SalarySelector.Add(".job-item-title p::attr(text)");
             SalarySelector.Add(".job-item-title");
+
+            TimeSelector.Add(".job-title-left time::attr(title)");
+            TimeSelector.Add(".job-title-left time::attr(text)");
+            if (File.Exists("output.csv"))
+            {
+                File.Delete("output.csv");
+            }
         }
 
         public override void ResponseHandler(IResponse response)
@@ -60,8 +71,15 @@ namespace NScrapy.Project
             var hrefs = returnValue.CssSelector(".job-info h3 a::attr(href)").Extract();
             foreach (var href in hrefs)
             {
-                //Thread.Sleep(1000);
                 NScrapy.Shell.NScrapy.GetInstance().Follow(returnValue, href, Parse);
+            }
+            var pages = returnValue.CssSelector(".pagerbar a::attr(href)").Extract();
+            foreach (var page in pages)
+            {
+                if (!page.Contains("javascript"))
+                {
+                    NScrapy.Shell.NScrapy.GetInstance().Follow(returnValue, page, VisitPage);
+                }
             }
         }
 
@@ -70,15 +88,19 @@ namespace NScrapy.Project
             var title = response.CssSelector(TitleSelector).ExtractFirst();    
             
             var firm = response.CssSelector(FirmSelector).ExtractFirst();
-
             var salary = response.CssSelector(SalarySelector).ExtractFirst();
+            var time = response.CssSelector(TimeSelector).ExtractFirst();
             if (title == null ||
                 firm == null ||
                 salary == null)
             {
                 NScrapyContext.CurrentContext.Log.Info($"Unable to get items from page {response.URL}");
             }
-            Console.WriteLine($"{title} {firm} {salary}");
+            var info = $"{title},{firm.Replace(System.Environment.NewLine, string.Empty).Trim()},{salary.Replace(System.Environment.NewLine, string.Empty).Trim()},{time}";
+            Console.WriteLine(info);
+            File.AppendAllText($"output-{this.startingTime}.csv",info+System.Environment.NewLine,Encoding.UTF8);
+            
         }
+        
     }
 }
