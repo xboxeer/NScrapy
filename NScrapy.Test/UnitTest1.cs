@@ -4,6 +4,7 @@ using NScrapy.Infra;
 using NScrapy.Infra.Attributes.SpiderAttributes;
 using NScrapy.Shell;
 using System.Diagnostics;
+using System.IO;
 using System.Text;
 using System.Threading;
 
@@ -92,6 +93,34 @@ namespace NScrapy.Test
         {
             Shell.NScrapy scrapy = NScrapy.Shell.NScrapy.GetInstance();
             scrapy.Crawl("UrlFilterTestSpider");
+        }
+        //this test is for the purpose that NScrapy can safely exit while it found out that there is no more items in Response/Request queue and no more Running Downloader
+        //The idea is that if Crawl would not exit if the checking of Response/Request/RunningDownloader failed, as long as it exit properly, log file would logs the url that 
+        //the spider has crawled, in this case it is https://www.liepin.com/zhaopin/?d_sfrom=search_fp_nvbar&init=1s, so a check of this string in log file would tell if the checking of Response/Request/RunningDownloader works
+        [TestMethod]
+        public void NScrapySuccessfullyExitTest()
+        {
+            var logPath = Path.Combine(Directory.GetCurrentDirectory(), "log-file.txt");
+            if (File.Exists(logPath))
+            {
+                File.Delete(logPath);
+            }
+            Shell.NScrapy scrapy = NScrapy.Shell.NScrapy.GetInstance();            
+            scrapy.Crawl("UrlFilterTestSpider");
+            //Make a copy of log file since the original log file is still in using by log4net
+            var copiedLogFile = Path.Combine(Directory.GetCurrentDirectory(), "log-file.test.txt");
+            File.Copy(logPath, copiedLogFile);
+            var logFileContent = string.Empty;
+            using (FileStream stream = File.OpenRead(copiedLogFile))
+            {
+                using (var ms = new MemoryStream())
+                {
+                    stream.CopyTo(ms);
+                    logFileContent = Encoding.UTF8.GetString(ms.ToArray());
+                }                
+            }
+            File.Delete(copiedLogFile);
+            Assert.IsTrue(logFileContent.Contains("https://www.liepin.com/zhaopin/?d_sfrom=search_fp_nvbar&init=1"));
         }
     }
 

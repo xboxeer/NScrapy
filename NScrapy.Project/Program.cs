@@ -19,7 +19,7 @@ namespace NScrapy.Project
         }
     }
     [Name(Name = "JobSpider")]
-    [URL("https://www.liepin.com/zhaopin/?ckid=14f634c4f64673b4&fromSearchBtn=2&init=-1&sfrom=click-pc_homepage-centre_searchbox-search_new&flushckid=1&dqs=&key=.net&headckid=46374f76c9769ff7&d_pageSize=40&siTag=LVCXL87NN2EpVFUH8QYgiQ%7Er3i1HcfrfE3VRWBaGW6LoA&d_headId=c84844d2749548903e20ddde1d713d12&d_ckId=7768bacafa68ea7a6181aa2a59daa5cf&d_sfrom=search_fp&d_curPage=0")]
+    [URL("https://www.liepin.com/zhaopin/?industries=&dqs=&salary=&jobKind=&pubTime=30&compkind=&compscale=&industryType=&searchType=1&clean_condition=&isAnalysis=&init=1&sortFlag=15&flushckid=0&fromSearchBtn=1&headckid=bb314f611fde073c&d_headId=4b294eff4ad202db83d4ed085fcbf94b&d_ckId=01fb643c53d14dd44d7991e27c98c51b&d_sfrom=search_prime&d_curPage=0&d_pageSize=40&siTag=k_cloHQj_hyIn0SLM9IfRg~UoKQA1_uiNxxEb8RglVcHg&key=php")]
     public class JobSpider : Spider.Spider
     {
         List<string> FirmSelector = new List<string>();
@@ -95,6 +95,7 @@ namespace NScrapy.Project
                 salary == null)
             {
                 NScrapyContext.CurrentContext.Log.Info($"Unable to get items from page {response.URL}");
+                return;
             }
             var info = $"{title},{firm.Replace(System.Environment.NewLine, string.Empty).Trim()},{salary.Replace(System.Environment.NewLine, string.Empty).Trim()},{time}";
             Console.WriteLine(info);

@@ -30,6 +30,7 @@ namespace NScrapy.Infra
         public Action<IResponse> Callback { get; set; }
         
         public HtmlDocument doc = new HtmlDocument();
+
         private StringBuilder strBuilder = new StringBuilder();
         private string reponsePlanText = string.Empty;
         private string attr = string.Empty;
@@ -113,6 +114,11 @@ namespace NScrapy.Infra
         public string ExtractFirst()
         {
             return this.Extract().FirstOrDefault();
+        }        
+
+        public string ExtractLast()
+        {
+            return this.Extract().LastOrDefault();
         }
 
         private HttpResponse CreateFilteredResponse(IList<HtmlNode> elements)
@@ -127,16 +133,11 @@ namespace NScrapy.Infra
                 RawResponseMessage = this.RawResponseMessage,
                 ReponsePlanText = strBuilder.ToString(),
                 Request = this.Request,
-                URL = this.URL                
+                URL = this.URL
             };
             returnValue.attr = this.attr;
             strBuilder.Clear();
             return returnValue;
-        }
-
-        public string ExtractLast()
-        {
-            return this.Extract().LastOrDefault();
         }
     }
 }

@@ -25,6 +25,14 @@ namespace NScrapy.Downloader
         public List<IDownloaderMiddleware> Middlewares { get; private set; }
         private HttpClient httpClient = null;
         
+        public static int RunningDownloader
+        {
+            get
+            {
+                return Downloader.DownloaderPool.Where(d => d.Status == DownloaderStatus.Running).Count();
+            }
+        }
+    
         static Downloader()
         {
             var capbility = NScrapyContext.CurrentContext.Configuration["AppSettings:DownloaderPoolCapbility"];

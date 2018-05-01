@@ -92,7 +92,20 @@ namespace NScrapy.Shell
             spider.StartRequests();
             while(true)
             {
+                Thread.Sleep(5000);
+                //Exit NScrapy if there is no pending Request/Reponse in queue and 
+                if (!this.AnymoreItemsInQueueAndDownloader())
+                {
+                    break;
+                }
             }
+        }
+
+        private bool AnymoreItemsInQueueAndDownloader()
+        {
+            return !(Scheduler.RequestReceiver.RequestQueue.Count == 0 &&
+                                Scheduler.ResponseDistributer.ResponseQueue.Count == 0 &&
+                                Downloader.Downloader.RunningDownloader == 0);
         }
 
         public void Request(string url,Action<IResponse> responseHandler)
