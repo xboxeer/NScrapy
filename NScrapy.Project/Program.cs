@@ -71,7 +71,10 @@ namespace NScrapy.Project
             var hrefs = returnValue.CssSelector(".job-info h3 a::attr(href)").Extract();
             foreach (var href in hrefs)
             {
-                NScrapy.Shell.NScrapy.GetInstance().Follow(returnValue, href, Parse);
+                //NScrapy.Shell.NScrapy.GetInstance().Follow(returnValue, href, Parse);
+                
+                //Use ItemLoader
+                NScrapy.Shell.NScrapy.GetInstance().Follow(returnValue, href, ParseItem);
             }
             var pages = returnValue.CssSelector(".pagerbar a::attr(href)").Extract();
             foreach (var page in pages)
@@ -102,6 +105,36 @@ namespace NScrapy.Project
             File.AppendAllText($"output-{this.startingTime}.csv",info+System.Environment.NewLine,Encoding.UTF8);
             
         }
+
+        public void ParseItem(IResponse response)
+        {
+            var itemLoader = new ItemLoader<JobItem>(response);
+            itemLoader.AddFieldMapping("Title", "css:.title-info h1::attr(text)");
+            itemLoader.AddFieldMapping("Title","css:.job-title h1::attr(text)");
+
+            itemLoader.AddFieldMapping("Firm","css:.title-info h3 a::attr(text)");
+            itemLoader.AddFieldMapping("Firm", "css:.title-info h3::attr(text)");
+            itemLoader.AddFieldMapping("Firm","css:.title-info h3");
+            itemLoader.AddFieldMapping("Firm","css:.job-title h2::attr(text)");
+
+            itemLoader.AddFieldMapping("Salary", "css:.job-main-title p::attr(text)");
+            itemLoader.AddFieldMapping("Salary", "css:.job-main-title strong::attr(text)");
+            itemLoader.AddFieldMapping("Salary", "css:.job-item-title p::attr(text)");
+            itemLoader.AddFieldMapping("Salary", "css:.job-item-title");
+
+            itemLoader.AddFieldMapping("Time","css:.job-title-left time::attr(title)");
+            itemLoader.AddFieldMapping("Time","css:.job-title-left time::attr(text)");
+            var item = itemLoader.LoadItem();
+            Console.WriteLine(item.Firm);
+        }
         
+    }
+
+    public class JobItem
+    {
+        public string Firm { get; set; }
+        public string Title { get; set; }
+        public string Salary { get; set; }
+        public string Time { get; set; }
     }
 }
