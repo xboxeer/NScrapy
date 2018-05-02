@@ -21,6 +21,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="appsettingRedis.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="appsettingUserAgent.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

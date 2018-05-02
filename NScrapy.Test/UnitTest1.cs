@@ -122,6 +122,17 @@ namespace NScrapy.Test
             File.Delete(copiedLogFile);
             Assert.IsTrue(logFileContent.Contains("https://www.liepin.com/zhaopin/?d_sfrom=search_fp_nvbar&init=1"));
         }
+
+        //This test case is actually not fully implemented, right now i just directly check the redis by using redis-cli to verify if the message has been published to topic 
+        [TestMethod]        
+        public void RedisSchedulerTest()
+        {
+            
+            Shell.NScrapy scrapy = NScrapy.Shell.NScrapy.GetInstance();
+            NScrapyContext.CurrentContext.RefreshConfigFile("appsettingRedis.json");
+            scrapy.ConfigSerivces();
+            Shell.NScrapy.GetInstance().Crawl("JobSpider");
+        }
     }
 
     [Name(Name = "JobSpider")]

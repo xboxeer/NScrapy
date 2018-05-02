@@ -20,7 +20,7 @@ namespace NScrapy.Spider
                     URL = url,
                     RequestSpider = this
                 };
-                Scheduler.Scheduler.SendRequestToReceiver(request);
+                NScrapyContext.CurrentContext.CurrentScheduler.SendRequestToReceiver(request);
             }
         }
 
