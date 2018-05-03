@@ -69,7 +69,8 @@ namespace NScrapy.Downloader
                 appAssembly = Assembly.GetEntryAssembly();
             }
             httpClient = new HttpClient();
-            var middlewareNames = NScrapyContext.CurrentContext.Configuration.GetSection("AppSettings:DownloaderMiddlewares").GetChildren();
+            
+            var middlewareNames = DownloaderContext.Context.CurrentConfig.GetSection("AppSettings:DownloaderMiddlewares").GetChildren();
             Middlewares = new List<IDownloaderMiddleware>
             {
                 new HttpHeaderMiddleware(),
@@ -79,7 +80,7 @@ namespace NScrapy.Downloader
             foreach (var middlewareNamePath in middlewareNames)
             {
                 var path =$"{middlewareNamePath.Path}:Middleware";
-                var middlewareName = NScrapyContext.CurrentContext.Configuration[path];
+                var middlewareName = DownloaderContext.Context.CurrentConfig[path];
                 if(string.IsNullOrEmpty(middlewareName))
                 {
                     continue;

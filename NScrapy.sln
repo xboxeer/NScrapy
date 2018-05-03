@@ -19,10 +19,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NScrapy.Project", "NScrapy.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NScrapy.Scheduler", "NScrapy.Scheduler\NScrapy.Scheduler.csproj", "{7A798D36-A9F0-434B-8670-12D330DA93A6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NScrapy.DownloaderShell", "NScrapy.DownloaderShell\NScrapy.DownloaderShell.csproj", "{BD17BC57-4D82-4C1A-978E-31EA34E119E6}"
+EndProject
 Global
-	GlobalSection(Performance) = preSolution
-		HasPerformanceSessions = true
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
@@ -60,12 +59,19 @@ Global
 		{7A798D36-A9F0-434B-8670-12D330DA93A6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7A798D36-A9F0-434B-8670-12D330DA93A6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7A798D36-A9F0-434B-8670-12D330DA93A6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BD17BC57-4D82-4C1A-978E-31EA34E119E6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BD17BC57-4D82-4C1A-978E-31EA34E119E6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BD17BC57-4D82-4C1A-978E-31EA34E119E6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BD17BC57-4D82-4C1A-978E-31EA34E119E6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B4A6FBBB-5836-46F3-A9CB-714A14FEB5C9}
+	EndGlobalSection
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
 	EndGlobalSection
 	GlobalSection(Performance) = preSolution
 		HasPerformanceSessions = true

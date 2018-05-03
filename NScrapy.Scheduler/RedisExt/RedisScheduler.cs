@@ -18,8 +18,7 @@ namespace NScrapy.Scheduler.RedisExt
             requests.Add(request.URL,request);
             //then send request to specific queue that the downloader is listening to
             var connection = RedisSchedulerContext.Current.Connection;
-            var sub = connection.GetSubscriber();
-            await sub.PublishAsync("NScrapy.Downloader", request.URL);
+            await connection.GetDatabase().ListLeftPushAsync(RedisSchedulerContext.Current.ReceiverQueue, request.URL);
         }
 
         public void SendResponseToDistributer(IResponse response)
