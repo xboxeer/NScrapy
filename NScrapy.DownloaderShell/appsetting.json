@@ -3,7 +3,8 @@
     "Scheduler.RedisExt": {
       "RedisServer": "127.0.0.1",
       "RedisPort": "6379",
-      "ReceiverQueue": "NScrapy.Downloader"
+      "ReceiverQueue": "NScrapy.Downloader",
+      "ResponseTopic": "NScrapy.ResponseTopic"
     },
     "DownloaderPoolCapbility": 4,
     "HttpHeader": {

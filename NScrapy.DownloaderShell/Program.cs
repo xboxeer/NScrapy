@@ -2,6 +2,7 @@
 using NScrapy.Infra;
 using System;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace NScrapy.DownloaderShell
 {
@@ -13,7 +14,7 @@ namespace NScrapy.DownloaderShell
             context.RunningMode = Downloader.DownloaderRunningMode.Distributed;
             context.Log.Info("Downloader Started");
             var receiveQueueName = DownloaderContext.Context.CurrentConfig["AppSettings:Scheduler.RedisExt:ReceiverQueue"];
-            var responseQueueName = DownloaderContext.Context.CurrentConfig["AppSettings:Scheduler.RedisExt:ResponseQueue"];
+            var responseTopicName = DownloaderContext.Context.CurrentConfig["AppSettings:Scheduler.RedisExt:ResponseTopic"];
             while (true)
             {
                 if (RedisManager.Connection.GetDatabase().ListLength(receiveQueueName) > 0 &&
@@ -25,12 +26,14 @@ namespace NScrapy.DownloaderShell
                         URL = url
                     };
                     var result = Downloader.Downloader.SendRequestAsync(request);
-                    result.ContinueWith(u =>
+                    result.ContinueWith(async u =>
                     {
-                        NScrapyContext.CurrentContext.CurrentScheduler.SendResponseToDistributer(u.Result);
+                        var resultJson = JsonConvert.SerializeObject(u.Result);
+                        var compressedJson =await NScrapyHelper.CompressString(resultJson);                        
+                        var publishResult = RedisManager.Connection.GetSubscriber().Publish(responseTopicName,$"{url}:{compressedJson}");
                         DownloaderContext.Context.Log.Info($"Sending request to {request.URL} success!");
                     },
-                        TaskContinuationOptions.OnlyOnRanToCompletion);
+                    TaskContinuationOptions.OnlyOnRanToCompletion);
                     result.ContinueWith(u => DownloaderContext.Context.Log.Info($"Sending request to {request.URL} failed", result.Exception.InnerException), TaskContinuationOptions.OnlyOnFaulted);
                 }
             }            
