@@ -45,24 +45,23 @@ namespace NScrapy.Downloader
             set
             {
                 runningMode = value;
-                if (value== DownloaderRunningMode.InMemory)
+                if (value == DownloaderRunningMode.InMemory && NScrapyContext.CurrentContext != null)
                 {
                     this.config = NScrapyContext.CurrentContext.Configuration;
                     this.log = NScrapyContext.CurrentContext.Log;
                 }
                 else
                 {
-                    if(config==NScrapyContext.CurrentContext.Configuration)
+
+                    var builder = new ConfigurationBuilder();
+                    builder.SetBasePath(Directory.GetCurrentDirectory()).AddJsonFile("appsetting.json");
+                    config = builder.Build();
+                    log = log4net.LogManager.GetLogger(this.GetType());
+                    using (FileStream fs = File.OpenRead(Path.Combine(Directory.GetCurrentDirectory(), "log4net.config")))
                     {
-                        var builder = new ConfigurationBuilder();
-                        builder.SetBasePath(Directory.GetCurrentDirectory()).AddJsonFile("appsetting.json");
-                        config = builder.Build();
-                        log = log4net.LogManager.GetLogger(this.GetType());
-                        using (FileStream fs = File.OpenRead(Path.Combine(Directory.GetCurrentDirectory(), "log4net.config")))
-                        {
-                            XmlConfigurator.Configure(Log.Logger.Repository, fs);
-                        }
+                        XmlConfigurator.Configure(Log.Logger.Repository, fs);
                     }
+
                 }
             }
         }

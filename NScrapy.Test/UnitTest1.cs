@@ -127,12 +127,27 @@ namespace NScrapy.Test
         [TestMethod]        
         public void RedisSchedulerTest()
         {
-            
             Shell.NScrapy scrapy = NScrapy.Shell.NScrapy.GetInstance();
             NScrapyContext.CurrentContext.RefreshConfigFile("appsettingRedis.json");
             scrapy.ConfigSerivces();
             Shell.NScrapy.GetInstance().Crawl("JobSpider");
         }
+
+        [TestMethod]
+        public void DistributedDownloaderTest()
+        {
+            Shell.NScrapy scrapy = NScrapy.Shell.NScrapy.GetInstance();
+            NScrapyContext.CurrentContext.RefreshConfigFile("appsettingRedis.json");
+            Shell.NScrapy.GetInstance().Crawl("JobSpider");
+            //Let's first start the individual Downloader by a thread
+            Thread t = new Thread(() => DownloaderShell.Program.Main(null));
+            t.Start();
+            while(true)
+            {
+
+            }
+        }
+
     }
 
     [Name(Name = "JobSpider")]

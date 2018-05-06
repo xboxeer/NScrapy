@@ -7,6 +7,12 @@ namespace NScrapy.Scheduler
 {
     public class InMemoryScheduler : IScheduler
     {
+        public InMemoryScheduler()
+        {
+            RequestReceiver.StartReceiver();
+            ResponseDistributer.StartDistribuiter();
+        }
+
         public void SendRequestToReceiver(IRequest request)
         {
             RequestReceiver.RequestQueue.Enqueue(request);

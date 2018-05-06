@@ -33,8 +33,7 @@ namespace NScrapy.Shell
             this._context = NScrapyContext.GetInstance();
             this._context.ConfigRefreshed += _context_ConfigRefreshed;
             SetServices();
-            Scheduler.RequestReceiver.StartReceiver();
-            Scheduler.ResponseDistributer.StartDistribuiter();
+            
         }
 
         private void SetServices()

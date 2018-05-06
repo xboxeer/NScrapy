@@ -17,7 +17,13 @@ namespace NScrapy.DownloaderShell
             var redisServer = DownloaderContext.Context.CurrentConfig["AppSettings:Scheduler.RedisExt:RedisServer"];
             var redisPort = DownloaderContext.Context.CurrentConfig["AppSettings:Scheduler.RedisExt:RedisPort"];
             ReceiverQueue = string.IsNullOrEmpty(DownloaderContext.Context.CurrentConfig["AppSettings:Scheduler.RedisExt:ReceiverQueue"]) ? "NScrapy.Downloader" : DownloaderContext.Context.CurrentConfig["AppSettings:Scheduler.RedisExt:ReceiverQueue"];
-            Connection = ConnectionMultiplexer.Connect($"{redisServer}:{redisPort}");
+            var options = new ConfigurationOptions()
+            {
+                EndPoints = { $"{redisServer}:{redisPort}" },
+                SyncTimeout = 60000,
+                ConnectTimeout=60000,
+            };
+            Connection = ConnectionMultiplexer.Connect(options);
         }
     }
 }

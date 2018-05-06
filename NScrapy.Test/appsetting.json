@@ -1,5 +1,11 @@
 ﻿{
   "AppSettings": {
+    "Scheduler.RedisExt": {
+      "RedisServer": "192.168.0.107",
+      "RedisPort": "6379",
+      "ReceiverQueue": "NScrapy.Downloader",
+      "ResponseTopic": "NScrapy.ResponseTopic"
+    },
     "DownloaderPoolCapbility": 4,
     "HttpHeader": {
       "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",

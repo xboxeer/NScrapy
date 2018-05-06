@@ -7,14 +7,87 @@ using System.Net.Http;
 using System.Text;
 using HtmlAgilityPack.CssSelectors.NetCore;
 using System.Text.RegularExpressions;
+using System.Runtime.Serialization;
+using System.Net.Http.Headers;
+using System.Net;
+using Newtonsoft.Json;
 
 namespace NScrapy.Infra
 {
+
     public class HttpResponse : IResponse
     {
-        public string URL { get ; set ; }
-        public IRequest Request { get ; set; }
-        public HttpResponseMessage RawResponseMessage { get; set; }        
+
+        private StringBuilder strBuilder = new StringBuilder();
+        private string reponsePlanText = string.Empty;
+        private string attr = string.Empty;
+        private HttpResponseMessage rawResponse;
+        private HtmlDocument doc = new HtmlDocument();
+        //Manually these field beacuse HttpResponseHeader can not be Serialized by JsonConvert
+        private List<string> acceptRanges;
+        private List<ViaHeaderValue> via;
+        private List<string> vary;
+        private List<ProductHeaderValue> upgrade;
+        private bool? transferEncodingChunked;
+        private List<TransferCodingHeaderValue> transferEncoding;
+        private List<string> trailer;
+        private List<ProductInfoHeaderValue> server;
+        private RetryConditionHeaderValue retryAfter;
+        private List<AuthenticationHeaderValue> proxyAuthenticate;
+        private List<NameValueHeaderValue> pragma;
+        private Uri location;
+        private EntityTagHeaderValue eTag;
+        private DateTimeOffset? date;
+        private bool? connectionClose;
+        private List<string> connection;
+        private CacheControlHeaderValue cacheControl;
+        private TimeSpan? age;
+        private List<WarningHeaderValue> warning;
+        private List<AuthenticationHeaderValue> wwwAuthenticate;
+
+        #region Ignored Property While JsonFormat.SerializeObject
+        [JsonIgnore]
+        public Action<IResponse> Callback { get; set; }
+
+        [JsonIgnore]
+        public IRequest Request { get; set; }
+
+        [JsonIgnore]
+        public HttpResponseMessage RawResponseMessage
+        {
+            get
+            {
+                return rawResponse;
+            }
+            set
+            {
+                rawResponse = value;
+                AcceptRanges = RawResponseMessage.Headers.AcceptRanges.ToList();
+                Via = RawResponseMessage.Headers.Via.ToList();
+                Vary = RawResponseMessage.Headers.Vary.ToList();
+                Upgrade = RawResponseMessage.Headers.Upgrade.ToList();
+                TransferEncodingChunked = RawResponseMessage.Headers.TransferEncodingChunked;
+                TransferEncoding = RawResponseMessage.Headers.TransferEncoding.ToList();
+                Trailer = RawResponseMessage.Headers.Trailer.ToList();
+                Server = RawResponseMessage.Headers.Server.ToList();
+                RetryAfter = RawResponseMessage.Headers.RetryAfter;
+                ProxyAuthenticate = RawResponseMessage.Headers.ProxyAuthenticate.ToList();
+                Pragma = RawResponseMessage.Headers.Pragma.ToList();
+                Location = RawResponseMessage.Headers.Location;
+                ETag = RawResponseMessage.Headers.ETag;
+                Date = RawResponseMessage.Headers.Date;
+                ConnectionClose = RawResponseMessage.Headers.ConnectionClose;
+                Connection = RawResponseMessage.Headers.Connection.ToList();
+                CacheControl = RawResponseMessage.Headers.CacheControl;
+                Age = RawResponseMessage.Headers.Age;
+                Warning = RawResponseMessage.Headers.Warning.ToList();
+                WwwAuthenticate = RawResponseMessage.Headers.WwwAuthenticate.ToList();
+            }
+        }
+        #endregion
+
+        public string URL { get; set; }
+
         public string ReponsePlanText
         {
             get
@@ -26,14 +99,30 @@ namespace NScrapy.Infra
                 this.reponsePlanText = value;
                 doc.LoadHtml(value);
             }
-        }       
-        public Action<IResponse> Callback { get; set; }
-        
-        public HtmlDocument doc = new HtmlDocument();
-
-        private StringBuilder strBuilder = new StringBuilder();
-        private string reponsePlanText = string.Empty;
-        private string attr = string.Empty;
+        }
+        #region HttpResponseHeader Properties
+        //Manually create these field beacuse HttpResponseHeader can not be Serialized by JsonConvert
+        public List<string> AcceptRanges { get => acceptRanges; set => acceptRanges = value; }
+        public List<ViaHeaderValue> Via { get => via; set => via = value; }
+        public List<string> Vary { get => vary; set => vary = value; }
+        public List<ProductHeaderValue> Upgrade { get => upgrade; set => upgrade = value; }
+        public bool? TransferEncodingChunked { get => transferEncodingChunked; set => transferEncodingChunked = value; }
+        public List<TransferCodingHeaderValue> TransferEncoding { get => transferEncoding; set => transferEncoding = value; }
+        public List<string> Trailer { get => trailer; set => trailer = value; }
+        public List<ProductInfoHeaderValue> Server { get => server; set => server = value; }
+        public RetryConditionHeaderValue RetryAfter { get => retryAfter; set => retryAfter = value; }
+        public List<AuthenticationHeaderValue> ProxyAuthenticate { get => proxyAuthenticate; set => proxyAuthenticate = value; }
+        public List<NameValueHeaderValue> Pragma { get => pragma; set => pragma = value; }
+        public Uri Location { get => location; set => location = value; }
+        public EntityTagHeaderValue ETag { get => eTag; set => eTag = value; }
+        public DateTimeOffset? Date { get => date; set => date = value; }
+        public bool? ConnectionClose { get => connectionClose; set => connectionClose = value; }
+        public List<string> Connection { get => connection; set => connection = value; }
+        public CacheControlHeaderValue CacheControl { get => cacheControl; set => cacheControl = value; }
+        public TimeSpan? Age { get => age; set => age = value; }
+        public List<WarningHeaderValue> Warning { get => warning; set => warning = value; }
+        public List<AuthenticationHeaderValue> WwwAuthenticate { get => wwwAuthenticate; set => wwwAuthenticate = value; }
+        #endregion
         public HttpResponse()
         {
             
@@ -130,7 +219,6 @@ namespace NScrapy.Infra
             }
             var returnValue = new HttpResponse()
             {
-                RawResponseMessage = this.RawResponseMessage,
                 ReponsePlanText = strBuilder.ToString(),
                 Request = this.Request,
                 URL = this.URL
@@ -138,6 +226,11 @@ namespace NScrapy.Infra
             returnValue.attr = this.attr;
             strBuilder.Clear();
             return returnValue;
+        }
+
+        public void InitHeaderProperties()
+        {
+
         }
     }
 }

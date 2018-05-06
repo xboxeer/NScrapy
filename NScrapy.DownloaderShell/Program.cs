@@ -3,12 +3,17 @@ using NScrapy.Infra;
 using System;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
+using System.Runtime.Serialization.Json;
+using System.IO;
+using System.Text;
+using System.Runtime.Serialization.Formatters.Binary;
 
 namespace NScrapy.DownloaderShell
 {
-    class Program
+    public class Program
     {
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
             var context = Downloader.DownloaderContext.Context;
             context.RunningMode = Downloader.DownloaderRunningMode.Distributed;
@@ -26,12 +31,24 @@ namespace NScrapy.DownloaderShell
                         URL = url
                     };
                     var result = Downloader.Downloader.SendRequestAsync(request);
+                    
                     result.ContinueWith(async u =>
                     {
-                        var resultJson = JsonConvert.SerializeObject(u.Result);
-                        var compressedJson =await NScrapyHelper.CompressString(resultJson);                        
-                        var publishResult = RedisManager.Connection.GetSubscriber().Publish(responseTopicName,$"{url}:{compressedJson}");
+
+                        var resultBinaryStr = string.Empty;
+                        try
+                        {                          
+                            resultBinaryStr = JsonConvert.SerializeObject(u.Result);
+                        }
+                        catch (Exception ex)
+                        {
+                            DownloaderContext.Context.Log.Error($"Serialize response for {request.URL} failed!", ex);
+                        }
+
+                        var compressedJson = await NScrapyHelper.CompressString(resultBinaryStr);
+                        var publishResult = RedisManager.Connection.GetSubscriber().Publish(responseTopicName, $"{url}|{compressedJson}");
                         DownloaderContext.Context.Log.Info($"Sending request to {request.URL} success!");
+
                     },
                     TaskContinuationOptions.OnlyOnRanToCompletion);
                     result.ContinueWith(u => DownloaderContext.Context.Log.Info($"Sending request to {request.URL} failed", result.Exception.InnerException), TaskContinuationOptions.OnlyOnFaulted);

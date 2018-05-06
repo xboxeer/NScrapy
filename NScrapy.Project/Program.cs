@@ -14,8 +14,12 @@ namespace NScrapy.Project
     {
         static void Main(string[] args)
         {
-            var shell = NScrapy.Shell.NScrapy.GetInstance();           
+            var shell = NScrapy.Shell.NScrapy.GetInstance();
             shell.Crawl("JobSpider");
+            while(true)
+            {
+
+            }
             return;
         }
     }

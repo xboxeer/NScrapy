@@ -25,7 +25,7 @@ namespace NScrapy.Downloader.Middleware
             {
                 return;
             }
-            var accept = NScrapy.Infra.NScrapyContext.CurrentContext.Configuration["AppSettings:HttpHeader:Accept"];
+            var accept = DownloaderContext.Context.CurrentConfig["AppSettings:HttpHeader:Accept"];
             if(!string.IsNullOrEmpty(accept))
             {
                 client.DefaultRequestHeaders.Add("Accept", accept);
@@ -35,7 +35,7 @@ namespace NScrapy.Downloader.Middleware
                 client.DefaultRequestHeaders.Add("Accept", @"text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,charset=utf-8");
             }
 
-            var acceptEncoding= NScrapy.Infra.NScrapyContext.CurrentContext.Configuration["AppSettings:HttpHeader:Accept-Encoding"];
+            var acceptEncoding= DownloaderContext.Context.CurrentConfig["AppSettings:HttpHeader:Accept-Encoding"];
             if(!string.IsNullOrEmpty(acceptEncoding))
             {
                 client.DefaultRequestHeaders.Add("Accept-Encoding", acceptEncoding);
@@ -45,7 +45,7 @@ namespace NScrapy.Downloader.Middleware
                 client.DefaultRequestHeaders.Add("Accept-Encoding", "gzip,deflate,br");
             }
 
-            var acceptLanguage = NScrapy.Infra.NScrapyContext.CurrentContext.Configuration["AppSettings:HttpHeader:Accept-Language"];
+            var acceptLanguage = DownloaderContext.Context.CurrentConfig["AppSettings:HttpHeader:Accept-Language"];
             if (!string.IsNullOrEmpty(acceptLanguage))
             {
                 client.DefaultRequestHeaders.Add("Accept-Language", acceptLanguage);
@@ -55,7 +55,7 @@ namespace NScrapy.Downloader.Middleware
                 client.DefaultRequestHeaders.Add("Accept-Language", "zh-CN,zh;q=0.9,en;q=0.8");
             }
 
-            var userAgent = NScrapy.Infra.NScrapyContext.CurrentContext.Configuration["AppSettings:HttpHeader:User-Agent"];
+            var userAgent = DownloaderContext.Context.CurrentConfig["AppSettings:HttpHeader:User-Agent"];
             if (!string.IsNullOrEmpty(userAgent))
             {
                 client.DefaultRequestHeaders.Add("User-Agent", userAgent);
