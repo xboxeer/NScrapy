@@ -35,7 +35,7 @@ namespace NScrapy.Downloader
     
         static Downloader()
         {
-            var capbility = NScrapyContext.CurrentContext.Configuration["AppSettings:DownloaderPoolCapbility"];
+            var capbility = DownloaderContext.Context.CurrentConfig["AppSettings:DownloaderPoolCapbility"];
             //Init a simple Downloader pool, right now does not support dynamicly increase pool size, 
             //default to 4 Downloader if DownloaderPoolCapbility is not setting
             if (string.IsNullOrEmpty(capbility))
@@ -69,7 +69,8 @@ namespace NScrapy.Downloader
                 appAssembly = Assembly.GetEntryAssembly();
             }
             httpClient = new HttpClient();
-            var middlewareNames = NScrapyContext.CurrentContext.Configuration.GetSection("AppSettings:DownloaderMiddlewares").GetChildren();
+            
+            var middlewareNames = DownloaderContext.Context.CurrentConfig.GetSection("AppSettings:DownloaderMiddlewares").GetChildren();
             Middlewares = new List<IDownloaderMiddleware>
             {
                 new HttpHeaderMiddleware(),
@@ -79,7 +80,7 @@ namespace NScrapy.Downloader
             foreach (var middlewareNamePath in middlewareNames)
             {
                 var path =$"{middlewareNamePath.Path}:Middleware";
-                var middlewareName = NScrapyContext.CurrentContext.Configuration[path];
+                var middlewareName = DownloaderContext.Context.CurrentConfig[path];
                 if(string.IsNullOrEmpty(middlewareName))
                 {
                     continue;
@@ -122,6 +123,7 @@ namespace NScrapy.Downloader
             {
                 Request = request,
                 RawResponseMessage = responseMessage,
+                ReponsePlanText = await responseMessage.Content.ReadAsStringAsync(),
                 URL = request.URL
             };
             foreach (var middleware in this.Middlewares)

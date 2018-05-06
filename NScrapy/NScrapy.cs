@@ -9,6 +9,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using System.Threading;
 using System.Text.RegularExpressions;
+using System.IO;
 
 namespace NScrapy.Shell
 {
@@ -30,11 +31,23 @@ namespace NScrapy.Shell
         {
             ConfigSerivces();
             this._context = NScrapyContext.GetInstance();
+            this._context.ConfigRefreshed += _context_ConfigRefreshed;
+            SetServices();
+            
+        }
+
+        private void SetServices()
+        {
             this._context.CurrentEngine = this._provider.GetService<IEngine>();
+            this._context.CurrentScheduler = this._provider.GetService<IScheduler>();
             //This is a temp solution, later on we will implement IOC in this place so we can chose other approach to filter the url
             this._context.UrlFilter = new InMemoryUrlFilter();
-            Scheduler.RequestReceiver.StartReceiver();
-            Scheduler.ResponseDistributer.StartDistribuiter();
+        }
+
+        private void _context_ConfigRefreshed(object arg1, EventArgs arg2)
+        {
+            ConfigSerivces();
+            SetServices();
         }
 
         public static NScrapy GetInstance()
@@ -51,7 +64,38 @@ namespace NScrapy.Shell
             var serviceCollection = new ServiceCollection();
             Type engineType = GetEngineType();
             serviceCollection.AddSingleton(typeof(IEngine), engineType);
+            serviceCollection.AddSingleton(typeof(IScheduler), GetSchedulerType());
             this._provider = serviceCollection.BuildServiceProvider();
+        }
+
+        private static Type GetSchedulerType()
+        {
+            var schedulerName = NScrapyContext.GetInstance().Configuration["AppSettings:Scheduler:SchedulerType"];
+            Type schedulerType = null;
+            if(string.IsNullOrEmpty(schedulerName))
+            {
+                return typeof(Scheduler.InMemoryScheduler);
+            }
+            else
+            {
+
+                Assembly schedulerAssembly = null;
+                var assemblyName = NScrapyContext.GetInstance().Configuration["AppSettings:Scheduler:SchedulerTypeAssembly"];
+                if(string.IsNullOrEmpty(assemblyName))
+                {
+                    schedulerAssembly = Assembly.LoadFrom(Path.Combine(Directory.GetCurrentDirectory(), "NScrapy.Scheduler.dll"));
+                }
+                else
+                {
+                    schedulerAssembly = Assembly.LoadFrom(Path.Combine(Directory.GetCurrentDirectory(), assemblyName));
+                }
+                schedulerType = schedulerAssembly.GetType(schedulerName);
+                if (!schedulerType.GetInterfaces().Contains(typeof(IScheduler)))
+                {
+                    throw new TypeLoadException($"{schedulerName} must implement NScrapy.Infra.IScheduler interface");
+                }
+            }
+            return schedulerType;
         }
 
         private static Type GetEngineType()
@@ -77,12 +121,12 @@ namespace NScrapy.Shell
                 engineType = engineAssembly.GetType(engineName);
                 if (!engineType.GetInterfaces().Contains(typeof(IEngine)))
                 {
-                    throw new InvalidCastException($"{engineName} must implement NScrapy.Infra.IEngin interface");
+                    throw new TypeLoadException($"{engineName} must implement NScrapy.Infra.IEngin interface");
                 }
             }
 
             return engineType;
-        }
+        }        
 
         public void Crawl(string spiderName)
         {
@@ -117,7 +161,7 @@ namespace NScrapy.Shell
                 Callback = responseHandler,
                 RequestSpider= NScrapyContext.CurrentContext.CurrentSpider
             };
-            Scheduler.Scheduler.SendRequestToReceiver(request);
+            NScrapyContext.CurrentContext.CurrentScheduler.SendRequestToReceiver(request);
         }
 
         public void Follow(IResponse sourceResponse, string url,Action<IResponse> responseHandler)
@@ -138,7 +182,7 @@ namespace NScrapy.Shell
                 Callback = responseHandler,
                 RequestSpider = NScrapyContext.CurrentContext.CurrentSpider
             };
-            Scheduler.Scheduler.SendRequestToReceiver(request);
+            NScrapyContext.CurrentContext.CurrentScheduler.SendRequestToReceiver(request);
         }
     }
 }

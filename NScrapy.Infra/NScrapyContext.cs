@@ -22,6 +22,9 @@ namespace NScrapy.Infra
         public ISpider CurrentSpider { get; set; }
         public ILog Log { get; set; }
         public IUrlFilter UrlFilter { get; set; }
+        public IScheduler CurrentScheduler { get; set; }
+
+        public event Action<object, EventArgs> ConfigRefreshed;
         
         public int VisitedUrl { get {return this.visitedUrl; } set
             {
@@ -55,7 +58,7 @@ namespace NScrapy.Infra
             return _instance;
         }
         
-        public  void RefreshConfigFile(string path="")
+        public void RefreshConfigFile(string path="")
         {
             var configFile = path;
             if(string.IsNullOrEmpty(configFile))
@@ -65,6 +68,10 @@ namespace NScrapy.Infra
             var builder = new ConfigurationBuilder();
             builder.SetBasePath(Directory.GetCurrentDirectory()).AddJsonFile(path);
             Configuration = builder.Build();
+            if(ConfigRefreshed!=null)
+            {
+                ConfigRefreshed(this, new EventArgs());
+            }
         }
         
     }

@@ -48,7 +48,7 @@ namespace NScrapy.Scheduler
 
                         result.ContinueWith(u =>
                         {
-                            Scheduler.SendResponseToDistributer(u.Result);
+                            NScrapyContext.CurrentContext.CurrentScheduler.SendResponseToDistributer(u.Result);
                             NScrapyContext.CurrentContext.Log.Info($"Sending request to {request.URL} success!");
                         },
                         TaskContinuationOptions.OnlyOnRanToCompletion);

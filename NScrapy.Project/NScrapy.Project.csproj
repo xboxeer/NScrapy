@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\NScrapy.DownloaderShell\NScrapy.DownloaderShell.csproj" />
     <ProjectReference Include="..\NScrapy.Infra\NScrapy.Infra.csproj" />
     <ProjectReference Include="..\NScrapy.Spider\NScrapy.Spider.csproj" />
     <ProjectReference Include="..\NScrapy\NScrapy.Shell.csproj" />

@@ -13,6 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\NScrapy.DownloaderShell\NScrapy.DownloaderShell.csproj" />
     <ProjectReference Include="..\NScrapy.Downloader\NScrapy.Downloader.csproj" />
     <ProjectReference Include="..\NScrapy.Engine\NScrapy.Engine.csproj" />
     <ProjectReference Include="..\NScrapy.Infra\NScrapy.Infra.csproj" />
@@ -21,6 +22,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="appsettingRedis.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="appsettingUserAgent.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
@@ -29,6 +33,6 @@
     </None>
   </ItemGroup>
 
-  <ProjectExtensions><VisualStudio><UserProperties /></VisualStudio></ProjectExtensions>
+  <ProjectExtensions><VisualStudio><UserProperties appsettingRedis_1json__JSONSchema="http://json.schemastore.org/asmdef" /></VisualStudio></ProjectExtensions>
 
 </Project>
