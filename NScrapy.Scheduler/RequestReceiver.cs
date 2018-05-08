@@ -38,7 +38,7 @@ namespace NScrapy.Scheduler
                         {
                             continue;
                         }
-                        if(NScrapyContext.CurrentContext.UrlFilter.IsUrlVisited(request.URL))
+                        if(NScrapyContext.CurrentContext.CurrentScheduler.UrlFilter.IsUrlVisited(request.URL).Result)
                         {
                             NScrapyContext.CurrentContext.Log.Info($"{request.URL} already visited");
                             continue;                            

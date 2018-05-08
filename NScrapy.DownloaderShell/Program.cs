@@ -8,6 +8,7 @@ using System.Runtime.Serialization.Json;
 using System.IO;
 using System.Text;
 using System.Runtime.Serialization.Formatters.Binary;
+using NScrapy.Scheduler.RedisExt;
 
 namespace NScrapy.DownloaderShell
 {
@@ -25,28 +26,36 @@ namespace NScrapy.DownloaderShell
                 if (RedisManager.Connection.GetDatabase().ListLength(receiveQueueName) > 0 &&
                    Downloader.Downloader.RunningDownloader < Downloader.Downloader.DownloaderPoolCapbility)
                 {
-                    var url = RedisManager.Connection.GetDatabase().ListRightPop(receiveQueueName);
+                    var requestMessage = RedisManager.Connection.GetDatabase().ListRightPop(receiveQueueName);
+                    var requestObj = JsonConvert.DeserializeObject<RedisRequestMessage>(requestMessage);
                     var request = new HttpRequest()
                     {
-                        URL = url
+                        URL = requestObj.URL
                     };
                     var result = Downloader.Downloader.SendRequestAsync(request);
                     
                     result.ContinueWith(async u =>
                     {
 
-                        var resultBinaryStr = string.Empty;
+                        var resultPayload = string.Empty;
                         try
                         {                          
-                            resultBinaryStr = JsonConvert.SerializeObject(u.Result);
+                            resultPayload = JsonConvert.SerializeObject(u.Result);
                         }
                         catch (Exception ex)
                         {
                             DownloaderContext.Context.Log.Error($"Serialize response for {request.URL} failed!", ex);
                         }
 
-                        var compressedJson = await NScrapyHelper.CompressString(resultBinaryStr);
-                        var publishResult = RedisManager.Connection.GetSubscriber().Publish(responseTopicName, $"{url}|{compressedJson}");
+                        resultPayload = await NScrapyHelper.CompressString(resultPayload);
+                        var responseMessage = new RedisResponseMessage()
+                        {
+                            URL = requestObj.URL,
+                            CallbacksFingerprint = requestObj.CallbacksFingerprint,
+                            Payload = resultPayload
+                        };
+
+                        var publishResult = RedisManager.Connection.GetSubscriber().Publish(responseTopicName, $"{JsonConvert.SerializeObject(responseMessage)}");
                         DownloaderContext.Context.Log.Info($"Sending request to {request.URL} success!");
 
                     },

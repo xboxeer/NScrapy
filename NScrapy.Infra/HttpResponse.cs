@@ -17,13 +17,12 @@ namespace NScrapy.Infra
 
     public class HttpResponse : IResponse
     {
-
         private StringBuilder strBuilder = new StringBuilder();
         private string reponsePlanText = string.Empty;
         private string attr = string.Empty;
         private HttpResponseMessage rawResponse;
         private HtmlDocument doc = new HtmlDocument();
-        //Manually these field beacuse HttpResponseHeader can not be Serialized by JsonConvert
+        #region Manually these field beacuse HttpResponseHeader can not be Serialized by JsonConvert
         private List<string> acceptRanges;
         private List<ViaHeaderValue> via;
         private List<string> vary;
@@ -44,6 +43,7 @@ namespace NScrapy.Infra
         private TimeSpan? age;
         private List<WarningHeaderValue> warning;
         private List<AuthenticationHeaderValue> wwwAuthenticate;
+        #endregion
 
         #region Ignored Property While JsonFormat.SerializeObject
         [JsonIgnore]

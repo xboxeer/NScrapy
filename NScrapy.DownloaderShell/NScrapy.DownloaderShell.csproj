@@ -3,6 +3,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.0</TargetFramework>
+    <NoWarn>$(NoWarn);NU1605</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -23,6 +24,7 @@
   <ItemGroup>
     <ProjectReference Include="..\NScrapy.Downloader\NScrapy.Downloader.csproj" />
     <ProjectReference Include="..\NScrapy.Infra\NScrapy.Infra.csproj" />
+    <ProjectReference Include="..\NScrapy.Scheduler\NScrapy.Scheduler.csproj" />
   </ItemGroup>
 
   <ItemGroup>

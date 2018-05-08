@@ -3,9 +3,12 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NScrapy.Infra;
 using NScrapy.Infra.Attributes.SpiderAttributes;
 using NScrapy.Shell;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 
 namespace NScrapy.Test
@@ -138,14 +141,10 @@ namespace NScrapy.Test
         {
             Shell.NScrapy scrapy = NScrapy.Shell.NScrapy.GetInstance();
             NScrapyContext.CurrentContext.RefreshConfigFile("appsettingRedis.json");
-            Shell.NScrapy.GetInstance().Crawl("JobSpider");
-            //Let's first start the individual Downloader by a thread
             Thread t = new Thread(() => DownloaderShell.Program.Main(null));
             t.Start();
-            while(true)
-            {
-
-            }
+            Shell.NScrapy.GetInstance().Crawl("JobSpider2");
+            //Let's first start the individual Downloader by a thread
         }
 
     }
@@ -171,6 +170,103 @@ namespace NScrapy.Test
         {
             response.CssSelector(".job-info h3 a");
         }
+    }
+
+    [Name(Name = "JobSpider2")]
+    [URL("https://www.liepin.com/zhaopin/?industries=&dqs=&salary=&jobKind=&pubTime=&compkind=&compscale=&industryType=&searchType=1&clean_condition=&isAnalysis=&init=1&sortFlag=15&flushckid=0&fromSearchBtn=1&headckid=0af8c9495882e6a7&d_headId=285a1c0df0556fc28874c7d7df42cf55&d_ckId=285a1c0df0556fc28874c7d7df42cf55&d_sfrom=search_fp&d_curPage=0&d_pageSize=40&siTag=9vh8n9z4s8Pwf5Px7ocSyQ~fA9rXquZc5IkJpXC-Ycixw&key=php")]
+    public class JobSpider2 : Spider.Spider
+    {
+        List<string> FirmSelector = new List<string>();
+        List<string> SalarySelector = new List<string>();
+        List<string> TitleSelector = new List<string>();
+        List<string> TimeSelector = new List<string>();
+        private string startingTime = DateTime.Now.ToString("yyyyMMddhhmm");
+        private Regex salaryReg = new Regex(@"(\d+)-(\d+)Íò");
+        public JobSpider2()
+        {
+            // FirmSelector.Add(".title-info h1::attr(text)");
+            TitleSelector.Add(".title-info h1::attr(text)");
+            TitleSelector.Add(".job-title h1::attr(text)");
+
+            FirmSelector.Add(".title-info h3 a::attr(text)");
+            FirmSelector.Add(".title-info h3::attr(text)");
+            FirmSelector.Add(".title-info h3");
+            FirmSelector.Add(".job-title h2::attr(text)");
+
+            SalarySelector.Add(".job-main-title p::attr(text)");
+            SalarySelector.Add(".job-main-title strong::attr(text)");
+            SalarySelector.Add(".job-item-title p::attr(text)");
+            SalarySelector.Add(".job-item-title");
+
+            TimeSelector.Add(".job-title-left time::attr(title)");
+            TimeSelector.Add(".job-title-left time::attr(text)");
+            if (File.Exists("output.csv"))
+            {
+                File.Delete("output.csv");
+            }
+        }
+
+        public override void ResponseHandler(IResponse response)
+        {
+            var httpResponse = response as HttpResponse;
+            var returnValue = response.CssSelector(".job-info h3 a::attr(href)");
+            var pages = response.CssSelector(".pagerbar a::attr(href)").Extract();
+            foreach (var page in pages)
+            {
+                if (!page.Contains("javascript"))
+                {
+                    NScrapy.Shell.NScrapy.GetInstance().Follow(returnValue, page, VisitPage);
+                }
+            }
+            VisitPage(returnValue);
+        }
+
+        private void VisitPage(IResponse returnValue)
+        {
+            var hrefs = returnValue.CssSelector(".job-info h3 a::attr(href)").Extract();
+            foreach (var href in hrefs)
+            {
+                NScrapy.Shell.NScrapy.GetInstance().Follow(returnValue, href, Parse);
+            }
+            var pages = returnValue.CssSelector(".pagerbar a::attr(href)").Extract();
+            foreach (var page in pages)
+            {
+                if (!page.Contains("javascript"))
+                {
+                    NScrapy.Shell.NScrapy.GetInstance().Follow(returnValue, page, VisitPage);
+                }
+            }
+        }
+
+        public void Parse(IResponse response)
+        {
+            var title = response.CssSelector(TitleSelector).ExtractFirst();
+
+            var firm = response.CssSelector(FirmSelector).ExtractFirst();
+            var salary = response.CssSelector(SalarySelector).ExtractFirst();
+            var time = response.CssSelector(TimeSelector).ExtractFirst();
+            if (title == null ||
+                firm == null ||
+                salary == null ||
+                time == null)
+            {
+                NScrapyContext.CurrentContext.Log.Info($"Unable to get items from page {response.URL}");
+                return;
+            }
+            var salaryFrom = string.Empty;
+            var salaryTo = string.Empty;
+            var match = salaryReg.Match(salary);
+            if (match.Groups != null && match.Groups.Count > 0)
+            {
+                salaryFrom = match.Groups[1].Value;
+                salaryTo = match.Groups[2].Value;
+            }
+            var info = $"{title},{firm.Replace(System.Environment.NewLine, string.Empty).Trim()},{salaryFrom.Trim()},{salaryTo.Trim()},{time}";
+            Console.WriteLine(info);
+            File.AppendAllText($"output-{this.startingTime}.csv", info + System.Environment.NewLine, Encoding.UTF8);
+
+        }
+
     }
 
     [Name(Name = "UrlFilterTestSpider")]

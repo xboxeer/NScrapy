@@ -134,14 +134,14 @@ namespace NScrapy.Shell
             var spider = Spider.SpiderFactory.GetSpider(spiderName);
             NScrapyContext.CurrentContext.CurrentSpider = spider;
             spider.StartRequests();
-            while(true)
-            {
-                Thread.Sleep(5000);
-                //Exit NScrapy if there is no pending Request/Reponse in queue and 
-                if (!this.AnymoreItemsInQueueAndDownloader())
-                {
-                    break;
-                }
+            while (true)
+            {                
+                //Thread.Sleep(5000);
+                ////Exit NScrapy if there is no pending Request/Reponse in queue and 
+                //if (!this.AnymoreItemsInQueueAndDownloader())
+                //{
+                //    break;
+                //}
             }
         }
 
@@ -175,7 +175,7 @@ namespace NScrapy.Shell
             {
                 url = "/" + url;
             }
-            var uri = new Uri(sourceResponse.Request.URL);
+            var uri = new Uri(sourceResponse.URL);
             var request = new HttpRequest()
             {
                 URL =$"{uri.Scheme}://{uri.Host}{url}",

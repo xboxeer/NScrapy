@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace NScrapy.Infra
 {
@@ -13,9 +14,9 @@ namespace NScrapy.Infra
         {
             VisitedUrl = new HashSet<string>();
         }
-        public bool IsUrlVisited(string url)
+        public async Task<bool> IsUrlVisited(string url)
         {
-            var urlMd5 = this.GetMD5Hash(url);
+            var urlMd5 = NScrapyHelper.GetMD5FromBytes(url);
             if(VisitedUrl.Contains(urlMd5))
             {
                 return true;
@@ -24,19 +25,6 @@ namespace NScrapy.Infra
             return false;
         }
 
-        private string GetMD5Hash(string url)
-        {
-            var sb = new StringBuilder();
-            using (MD5 md5 = MD5.Create())
-            {
-                var bytes = Encoding.UTF8.GetBytes(url);
-                var hashBytes = md5.ComputeHash(bytes);
-                foreach(var hashByte in hashBytes)
-                {
-                    sb.Append(hashByte.ToString("X2"));
-                }
-            }
-            return sb.ToString();
-        }
+        
     }
 }
