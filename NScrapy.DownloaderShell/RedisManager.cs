@@ -3,6 +3,7 @@ using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 
 namespace NScrapy.DownloaderShell
 {
@@ -24,6 +25,20 @@ namespace NScrapy.DownloaderShell
                 ConnectTimeout=60000,
             };
             Connection = ConnectionMultiplexer.Connect(options);
+        }
+
+        public  static void GetLock(string lockKey, string keyToken)
+        {
+            while (!Connection.GetDatabase().LockTake(lockKey, keyToken,new TimeSpan(TimeSpan.TicksPerSecond)))
+            {
+                //Sleep until we got the lock
+                Thread.Sleep(10);
+            }
+        }
+
+        public static void ReleaseLock(string lockKey, string keyToken)
+        {
+            Connection.GetDatabase().LockRelease(lockKey, keyToken);
         }
     }
 }

@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 
 namespace NScrapy.Scheduler.RedisExt
 {
@@ -44,6 +45,6 @@ namespace NScrapy.Scheduler.RedisExt
                 EndPoints = { $"{RedisServer}:{RedisPort}" }
             };
             Connection = ConnectionMultiplexer.Connect(options);
-        }
+        }        
     }
 }
