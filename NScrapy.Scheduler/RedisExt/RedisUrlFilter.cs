@@ -10,7 +10,7 @@ namespace NScrapy.Scheduler.RedisExt
     {
         public async Task<bool> IsUrlVisited(string url)
         {
-            var urlMD5 = NScrapyHelper.GetMD5FromBytes(url);
+            var urlMD5 = NScrapyHelper.GetMD5FromString(url);
             var connection = RedisSchedulerContext.Current.Connection;
             var urlSetName = $"{RedisSchedulerContext.Current.ReceiverQueue}.VisitedURLMD5";
             if(await connection.GetDatabase().SetContainsAsync(urlSetName, urlMD5))

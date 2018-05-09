@@ -23,7 +23,7 @@ namespace NScrapy.Scheduler.RedisExt
         //这个机制的坏处是假如有100个爬虫 每个爬虫有10个方法回调，那么总共会有100*10条重复数据（如果每个回调方法都产生数据记录的话）
         //然而实际中这样的情况应该不多 
         private Dictionary<string, bool> callBackExcutedList = new Dictionary<string, bool>();
-        private string defaultCallbackFingerPrinter = string.Empty;
+        private string defaultCallbackName = string.Empty;
         public IUrlFilter UrlFilter { get; set; }
 
         public RedisScheduler()
@@ -37,15 +37,16 @@ namespace NScrapy.Scheduler.RedisExt
         //Add ResponseHandler method of the Spider to registedCallback Dic as Default Callback
         private void AddDefaultHandlerToCallbackList()
         {
-            if(!string.IsNullOrEmpty(defaultCallbackFingerPrinter))
+            if(!string.IsNullOrEmpty(defaultCallbackName))
             {
                 return;
             }
             var currentSpider = NScrapyContext.CurrentContext.CurrentSpider;
             var defaultCallback = new Action<IResponse>(currentSpider.ResponseHandler);
-            defaultCallbackFingerPrinter = NScrapyHelper.GetMD5FromBytes(defaultCallback.GetMethodInfo().GetMethodBody().GetILAsByteArray());
-            registedCallback.Add(defaultCallbackFingerPrinter, defaultCallback);
-            callBackExcutedList.Add(defaultCallbackFingerPrinter, false);
+            defaultCallbackName = defaultCallback.GetMethodInfo().Name;
+            //defaultCallbackName = NScrapyHelper.GetMD5FromString(methodName);
+            registedCallback.Add(defaultCallbackName, defaultCallback);
+            callBackExcutedList.Add(defaultCallbackName, false);
         }
 
         public void SendRequestToReceiver(IRequest request)
@@ -55,27 +56,27 @@ namespace NScrapy.Scheduler.RedisExt
              task.ContinueWith( u =>
                  {                     
                      var connection = RedisSchedulerContext.Current.Connection;
-                     var callbackFingerPrinter = this.defaultCallbackFingerPrinter;
+                     var callbackName = this.defaultCallbackName;
                      if (request.Callback != null)
                      {
-                         callbackFingerPrinter = NScrapyHelper.GetMD5FromBytes(request.Callback.GetMethodInfo().GetMethodBody().GetILAsByteArray());
-                         if (!registedCallback.ContainsKey(callbackFingerPrinter))
+                         callbackName = request.Callback.GetMethodInfo().Name;
+                         if (!registedCallback.ContainsKey(callbackName))
                          {
-                             registedCallback.Add(callbackFingerPrinter, request.Callback);
-                             callBackExcutedList.Add(callbackFingerPrinter, false);
+                             registedCallback.Add(callbackName, request.Callback);
+                             callBackExcutedList.Add(callbackName, false);
                          }
                      }
                      //Url Visted and coresponding call back already Executed before
                      if (u.Result &&
-                        callBackExcutedList.ContainsKey(callbackFingerPrinter) &&
-                        callBackExcutedList[callbackFingerPrinter] == true)
+                        callBackExcutedList.ContainsKey(callbackName) &&
+                        callBackExcutedList[callbackName] == true)
                      {
                          return;
                      }
                      var requestMessage = new RedisRequestMessage()
                      {
                          URL = request.URL,
-                         CallbacksFingerprint = callbackFingerPrinter
+                         CallbacksFingerprint = callbackName
                      };
                      connection.GetDatabase().ListLeftPushAsync(RedisSchedulerContext.Current.ReceiverQueue, JsonConvert.SerializeObject(requestMessage));
                  }, TaskContinuationOptions.OnlyOnRanToCompletion
