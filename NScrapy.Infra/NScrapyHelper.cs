@@ -47,7 +47,7 @@ namespace NScrapy.Infra
             return sb.ToString();
         }
 
-        public static string GetMD5FromBytes(string url)
+        public static string GetMD5FromString(string url)
         {
             return GetMD5FromBytes(Encoding.UTF8.GetBytes(url));   
         }

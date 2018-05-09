@@ -16,7 +16,7 @@ namespace NScrapy.Infra
         }
         public async Task<bool> IsUrlVisited(string url)
         {
-            var urlMd5 = NScrapyHelper.GetMD5FromBytes(url);
+            var urlMd5 = NScrapyHelper.GetMD5FromString(url);
             if(VisitedUrl.Contains(urlMd5))
             {
                 return true;
