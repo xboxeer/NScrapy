@@ -20,7 +20,7 @@ namespace NScrapy.DownloaderShell
             context.RunningMode = Downloader.DownloaderRunningMode.Distributed;
             context.Log.Info("Downloader Started");
             var receiveQueueName = DownloaderContext.Context.CurrentConfig["AppSettings:Scheduler.RedisExt:ReceiverQueue"];
-            var responseTopicName = DownloaderContext.Context.CurrentConfig["AppSettings:Scheduler.RedisExt:ResponseTopic"];
+            var responseQueueName = DownloaderContext.Context.CurrentConfig["AppSettings:Scheduler.RedisExt:ResponseQueue"];
             while (true)
             {
                 var lockToken = new Guid().ToString();
@@ -45,12 +45,12 @@ namespace NScrapy.DownloaderShell
                     {
                         RedisManager.ReleaseLock($"{receiveQueueName}.Lock", lockToken);
                     }
-                    ProcessRequestAndSendBack(responseTopicName, requestMessage);
+                    ProcessRequestAndSendBack(responseQueueName, requestMessage);
                 }
             }            
         }
 
-        private static void ProcessRequestAndSendBack(string responseTopicName, string requestMessage)
+        private static void ProcessRequestAndSendBack(string responseQueueName, string requestMessage)
         {
             var requestObj = JsonConvert.DeserializeObject<RedisRequestMessage>(requestMessage);
             var request = new HttpRequest()
@@ -80,7 +80,8 @@ namespace NScrapy.DownloaderShell
                     Payload = resultPayload
                 };
 
-                var publishResult = RedisManager.Connection.GetSubscriber().Publish(responseTopicName, $"{JsonConvert.SerializeObject(responseMessage)}");
+                //var publishResult = RedisManager.Connection.GetSubscriber().Publish(responseQueueName, $"{JsonConvert.SerializeObject(responseMessage)}");
+                var publishResult = RedisManager.Connection.GetDatabase().ListLeftPush(responseQueueName, $"{JsonConvert.SerializeObject(responseMessage)}");
                 DownloaderContext.Context.Log.Info($"Sending request to {request.URL} success!");
 
             },

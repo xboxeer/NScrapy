@@ -27,7 +27,7 @@ namespace NScrapy.DownloaderShell
             Connection = ConnectionMultiplexer.Connect(options);
         }
 
-        public  static void GetLock(string lockKey, string keyToken)
+        public static void GetLock(string lockKey, string keyToken)
         {
             while (!Connection.GetDatabase().LockTake(lockKey, keyToken,new TimeSpan(TimeSpan.TicksPerSecond)))
             {
