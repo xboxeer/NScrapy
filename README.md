@@ -32,26 +32,6 @@ Usage:
         private string startingTime = DateTime.Now.ToString("yyyyMMddhhmm");
         public JobSpider()
         {
-            // FirmSelector.Add(".title-info h1::attr(text)");
-            TitleSelector.Add(".title-info h1::attr(text)");
-            TitleSelector.Add(".job-title h1::attr(text)");
-
-            FirmSelector.Add(".title-info h3 a::attr(text)");
-            FirmSelector.Add(".title-info h3::attr(text)");
-            FirmSelector.Add(".title-info h3");
-            FirmSelector.Add(".job-title h2::attr(text)");
-
-            SalarySelector.Add(".job-main-title p::attr(text)");
-            SalarySelector.Add(".job-main-title strong::attr(text)");
-            SalarySelector.Add(".job-item-title p::attr(text)");
-            SalarySelector.Add(".job-item-title");
-
-            TimeSelector.Add(".job-title-left time::attr(title)");
-            TimeSelector.Add(".job-title-left time::attr(text)");
-            if (File.Exists("output.csv"))
-            {
-                File.Delete("output.csv");
-            }
         }
 
         public override void ResponseHandler(IResponse response)
@@ -74,8 +54,6 @@ Usage:
             var hrefs = returnValue.CssSelector(".job-info h3 a::attr(href)").Extract();
             foreach (var href in hrefs)
             {
-                //NScrapy.Shell.NScrapy.GetInstance().Follow(returnValue, href, Parse);
-                
                 //Use ItemLoader
                 NScrapy.Shell.NScrapy.GetInstance().Follow(returnValue, href, ParseItem);
             }
@@ -87,26 +65,6 @@ Usage:
                     NScrapy.Shell.NScrapy.GetInstance().Follow(returnValue, page, VisitPage);
                 }
             }
-        }
-
-        public void Parse(IResponse response)
-        {            
-            var title = response.CssSelector(TitleSelector).ExtractFirst();    
-            
-            var firm = response.CssSelector(FirmSelector).ExtractFirst();
-            var salary = response.CssSelector(SalarySelector).ExtractFirst();
-            var time = response.CssSelector(TimeSelector).ExtractFirst();
-            if (title == null ||
-                firm == null ||
-                salary == null)
-            {
-                NScrapyContext.CurrentContext.Log.Info($"Unable to get items from page {response.URL}");
-                return;
-            }
-            var info = $"{title},{firm.Replace(System.Environment.NewLine, string.Empty).Trim()},{salary.Replace(System.Environment.NewLine, string.Empty).Trim()},{time}";
-            Console.WriteLine(info);
-            File.AppendAllText($"output-{this.startingTime}.csv",info+System.Environment.NewLine,Encoding.UTF8);
-            
         }
 
         public void ParseItem(IResponse response)
