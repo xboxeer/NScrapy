@@ -93,73 +93,41 @@ namespace NScrapy.Scheduler.RedisExt
         {
             //response.Request = requests[response.URL];
             //ResponseDistributer.ResponseQueue.Enqueue(response);
-        } 
+        }
 
         private void ListenToRedisTopic()
-        {            
+        {
             var connection = RedisSchedulerContext.Current.Connection;
             while (true)
             {
                 var lockToken = new Guid();
-                RedisSchedulerContext.Current.GetLock($"{RedisSchedulerContext.Current.ResponseQueue}.Lock", lockToken.ToString());
-                if (RedisSchedulerContext.Current.Connection.GetDatabase().ListLength(RedisSchedulerContext.Current.ResponseQueue) > 0)
+                RedisResponseMessage responseMessage = null;
+                RedisValue value = new RedisValue();
+                try
                 {
-                    var value = RedisSchedulerContext.Current.Connection.GetDatabase().ListRightPop(RedisSchedulerContext.Current.ResponseQueue);
-                    var responseMessage = JsonConvert.DeserializeObject<RedisResponseMessage>(value);
-                    if (registedCallback.ContainsKey(responseMessage.CallbacksFingerprint))
+                    RedisSchedulerContext.Current.GetLock($"{RedisSchedulerContext.Current.ResponseQueue}.Lock", lockToken.ToString());
+                    if (RedisSchedulerContext.Current.Connection.GetDatabase().ListLength(RedisSchedulerContext.Current.ResponseQueue) > 0)
                     {
-
-                        try
-                        {
-
-                            var callback = registedCallback[responseMessage.CallbacksFingerprint];
-                            var response = NScrapyHelper.DecompressResponse(responseMessage.Payload);
-                            callback(response);
-                            callBackExcutedList[responseMessage.CallbacksFingerprint] = true;
-                            //connection.GetSubscriber().
-                        }
-                        catch (Exception ex)
-                        {
-                            NScrapyContext.CurrentContext.Log.Error($"Error processing {responseMessage.URL} with Handler {responseMessage.CallbacksFingerprint}", ex);
-                        }
-                        finally
-                        {
-                            RedisSchedulerContext.Current.ReleaseLock($"{RedisSchedulerContext.Current.ResponseQueue}.Lock", lockToken.ToString());
-                        }
+                        value = RedisSchedulerContext.Current.Connection.GetDatabase().ListRightPop(RedisSchedulerContext.Current.ResponseQueue);
                     }
                 }
+                catch (Exception ex)
+                {
+                    NScrapyContext.CurrentContext.Log.Error($"Error processing {responseMessage.URL} with Handler {responseMessage.CallbacksFingerprint}", ex);
+                }
+                finally
+                {
+                    RedisSchedulerContext.Current.ReleaseLock($"{RedisSchedulerContext.Current.ResponseQueue}.Lock", lockToken.ToString());
+                }
+                responseMessage = JsonConvert.DeserializeObject<RedisResponseMessage>(value);
+                if (registedCallback.ContainsKey(responseMessage.CallbacksFingerprint))
+                {
+                    var callback = registedCallback[responseMessage.CallbacksFingerprint];
+                    var response = NScrapyHelper.DecompressResponse(responseMessage.Payload);
+                    callback(response);
+                    callBackExcutedList[responseMessage.CallbacksFingerprint] = true;
+                }                
             }
-            //connection.GetSubscriber().Subscribe(RedisSchedulerContext.Current.ResponseQueue,
-            //      (channel, value) =>
-            //     {
-            //         if (!string.IsNullOrEmpty(value))
-            //         {
-                         
-            //             var responseMessage = JsonConvert.DeserializeObject<RedisResponseMessage>(value);
-            //             if (registedCallback.ContainsKey(responseMessage.CallbacksFingerprint))
-            //             {
-                             
-            //                 try
-            //                 {
-                                 
-            //                     var callback = registedCallback[responseMessage.CallbacksFingerprint];
-            //                     var response = NScrapyHelper.DecompressResponse(responseMessage.Payload);
-            //                     callback(response);
-            //                     callBackExcutedList[responseMessage.CallbacksFingerprint] = true;
-            //                     //connection.GetSubscriber().
-            //                 }
-            //                 catch(Exception ex)
-            //                 {
-            //                     NScrapyContext.CurrentContext.Log.Error($"Error processing {responseMessage.URL} with Handler {responseMessage.CallbacksFingerprint}", ex);
-            //                 }
-            //                 finally
-            //                 {
-            //                     RedisSchedulerContext.Current.ReleaseLock($"{RedisSchedulerContext.Current.ResponseQueue}.Lock", lockToken.ToString());
-            //                 }
-                             
-            //             }
-            //         }
-            //     });
         }
     }
 }
