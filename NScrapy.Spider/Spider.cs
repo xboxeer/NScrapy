@@ -11,6 +11,11 @@ namespace NScrapy.Spider
         public List<string> URLs { get; set; }
         public List<ISpiderMiddleware> Middlewares { get ; set; }
 
+        public Spider()
+        {
+            NScrapyContext.CurrentContext.CurrentSpider = this;
+        }
+
         public virtual void StartRequests()
         {
             foreach (var url in this.URLs)

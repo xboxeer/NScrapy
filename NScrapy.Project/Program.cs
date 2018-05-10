@@ -20,11 +20,10 @@ namespace NScrapy.Project
             {
 
             }
-            return;
         }
     }
     [Name(Name = "JobSpider")]
-    [URL("https://www.liepin.com/zhaopin/?sfrom=click-pc_homepage-centre_searchbox-search_new&d_sfrom=search_fp&key=C%2B%2B")]
+    [URL("https://www.liepin.com/zhaopin/?industries=&dqs=&salary=&jobKind=&pubTime=&compkind=&compscale=&industryType=&searchType=1&clean_condition=&isAnalysis=&init=1&sortFlag=15&flushckid=0&fromSearchBtn=1&headckid=0af8c9495882e6a7&d_headId=285a1c0df0556fc28874c7d7df42cf55&d_ckId=285a1c0df0556fc28874c7d7df42cf55&d_sfrom=search_fp&d_curPage=0&d_pageSize=40&siTag=9vh8n9z4s8Pwf5Px7ocSyQ~fA9rXquZc5IkJpXC-Ycixw&key=php")]
     public class JobSpider : Spider.Spider
     {
         List<string> FirmSelector = new List<string>();

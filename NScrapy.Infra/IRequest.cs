@@ -11,5 +11,8 @@ namespace NScrapy.Infra
         HttpClient Client { get; set; }
         ISpider RequestSpider { get; set; }
         Action<IResponse> Callback { get; set; }
+        HttpMethod Method { get; set; }
+        Dictionary<string, string> FormData {get;set;}
+        string Cookies { get; set; }
     }
 }

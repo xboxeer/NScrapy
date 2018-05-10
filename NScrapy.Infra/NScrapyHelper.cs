@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Net.Http;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -30,6 +31,25 @@ namespace NScrapy.Infra
             var serializedResponseStr =  DecompressResponseStr(str);
             var response = JsonConvert.DeserializeObject<HttpResponse>(serializedResponseStr);
             return response;
+        }
+
+        public static string GetMD5FromBytes(byte[] inputBytes)
+        {
+            var sb = new StringBuilder();
+            using (MD5 md5 = MD5.Create())
+            {                
+                var hashBytes = md5.ComputeHash(inputBytes);
+                foreach (var hashByte in hashBytes)
+                {
+                    sb.Append(hashByte.ToString("X2"));
+                }
+            }
+            return sb.ToString();
+        }
+
+        public static string GetMD5FromString(string url)
+        {
+            return GetMD5FromBytes(Encoding.UTF8.GetBytes(url));   
         }
 
         private static string DecompressResponseStr(string str)

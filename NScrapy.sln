@@ -19,7 +19,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NScrapy.Project", "NScrapy.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NScrapy.Scheduler", "NScrapy.Scheduler\NScrapy.Scheduler.csproj", "{7A798D36-A9F0-434B-8670-12D330DA93A6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NScrapy.DownloaderShell", "NScrapy.DownloaderShell\NScrapy.DownloaderShell.csproj", "{BD17BC57-4D82-4C1A-978E-31EA34E119E6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NScrapy.DownloaderShell", "NScrapy.DownloaderShell\NScrapy.DownloaderShell.csproj", "{BD17BC57-4D82-4C1A-978E-31EA34E119E6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

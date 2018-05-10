@@ -134,14 +134,14 @@ namespace NScrapy.Shell
             var spider = Spider.SpiderFactory.GetSpider(spiderName);
             NScrapyContext.CurrentContext.CurrentSpider = spider;
             spider.StartRequests();
-            while(true)
-            {
-                Thread.Sleep(5000);
-                //Exit NScrapy if there is no pending Request/Reponse in queue and 
-                if (!this.AnymoreItemsInQueueAndDownloader())
-                {
-                    break;
-                }
+            while (true)
+            {                
+                //Thread.Sleep(5000);
+                ////Exit NScrapy if there is no pending Request/Reponse in queue and 
+                //if (!this.AnymoreItemsInQueueAndDownloader())
+                //{
+                //    break;
+                //}
             }
         }
 
@@ -152,19 +152,21 @@ namespace NScrapy.Shell
                                 Downloader.Downloader.RunningDownloader == 0);
         }
 
-        public void Request(string url,Action<IResponse> responseHandler)
+        public void Request(string url,Action<IResponse> responseHandler=null,string cookies=null, Dictionary<string,string> formData=null)
         {
             NScrapyContext.CurrentContext.Log.Info($"Sending Request to {url}");
             var request = new HttpRequest()
             {
                 URL = url,
-                Callback = responseHandler,
-                RequestSpider= NScrapyContext.CurrentContext.CurrentSpider
+                Callback = responseHandler ?? NScrapyContext.CurrentContext.CurrentSpider.ResponseHandler,
+                RequestSpider = NScrapyContext.CurrentContext.CurrentSpider,
+                FormData = formData,
+                Cookies = cookies
             };
             NScrapyContext.CurrentContext.CurrentScheduler.SendRequestToReceiver(request);
         }
 
-        public void Follow(IResponse sourceResponse, string url,Action<IResponse> responseHandler)
+        public void Follow(IResponse sourceResponse, string url,Action<IResponse> responseHandler=null,string cookies=null, Dictionary<string,string> formData=null)
         {
             //Replace uri.Schema and uri.host incase the url already have those inforamtion
             url = urlHostReg.Replace(url, "");
@@ -175,12 +177,14 @@ namespace NScrapy.Shell
             {
                 url = "/" + url;
             }
-            var uri = new Uri(sourceResponse.Request.URL);
+            var uri = new Uri(sourceResponse.URL);
             var request = new HttpRequest()
             {
                 URL =$"{uri.Scheme}://{uri.Host}{url}",
-                Callback = responseHandler,
-                RequestSpider = NScrapyContext.CurrentContext.CurrentSpider
+                Callback = responseHandler ?? NScrapyContext.CurrentContext.CurrentSpider.ResponseHandler,
+                RequestSpider = NScrapyContext.CurrentContext.CurrentSpider,
+                FormData = formData,
+                Cookies=cookies
             };
             NScrapyContext.CurrentContext.CurrentScheduler.SendRequestToReceiver(request);
         }

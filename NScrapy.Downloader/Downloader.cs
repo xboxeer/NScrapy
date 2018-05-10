@@ -113,7 +113,19 @@ namespace NScrapy.Downloader
             }
             try
             {
-                 responseMessage = await this.httpClient.GetAsync(request.URL);
+                if(!string.IsNullOrEmpty(request.Cookies))
+                {
+                    this.httpClient.DefaultRequestHeaders.Add("Cookie", request.Cookies);
+                }
+                if (request.FormData == null || request.FormData.Count==0)
+                {
+                    responseMessage = await this.httpClient.GetAsync(request.URL);
+                }
+                else
+                {
+                    var httpContent = new FormUrlEncodedContent(request.FormData);
+                    responseMessage = await this.httpClient.PostAsync(request.URL, httpContent);
+                }
             }
             finally
             {

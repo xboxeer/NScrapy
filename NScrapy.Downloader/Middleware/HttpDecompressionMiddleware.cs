@@ -27,6 +27,10 @@ namespace NScrapy.Downloader.Middleware
                 {
                     decompressedBody = this.Decompressor(resultStream, ContentCompressType.Deflate);
                 }
+                else
+                {
+                    decompressedBody = response.RawResponseMessage.Content.ReadAsStringAsync().Result;
+                }
             }
             else
             {
