@@ -20,7 +20,5 @@ namespace NScrapy.Scheduler.RedisExt
             await connection.GetDatabase().SetAddAsync(urlSetName, urlMD5);
             return false;
         }
-
-
     }
 }
