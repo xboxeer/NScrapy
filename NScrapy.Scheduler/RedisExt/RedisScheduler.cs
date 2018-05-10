@@ -119,6 +119,10 @@ namespace NScrapy.Scheduler.RedisExt
                 {
                     RedisSchedulerContext.Current.ReleaseLock($"{RedisSchedulerContext.Current.ResponseQueue}.Lock", lockToken.ToString());
                 }
+                if(!value.HasValue)
+                {
+                    continue;
+                }
                 responseMessage = JsonConvert.DeserializeObject<RedisResponseMessage>(value);
                 if (registedCallback.ContainsKey(responseMessage.CallbacksFingerprint))
                 {
