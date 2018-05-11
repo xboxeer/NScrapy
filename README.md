@@ -25,10 +25,6 @@ Usage:
     [URL("https://www.liepin.com/zhaopin/?industries=&dqs=&salary=&jobKind=&pubTime=30&compkind=&compscale=&industryType=&searchType=1&clean_condition=&isAnalysis=&init=1&sortFlag=15&flushckid=0&fromSearchBtn=1&headckid=bb314f611fde073c&d_headId=4b294eff4ad202db83d4ed085fcbf94b&d_ckId=01fb643c53d14dd44d7991e27c98c51b&d_sfrom=search_prime&d_curPage=0&d_pageSize=40&siTag=k_cloHQj_hyIn0SLM9IfRg~UoKQA1_uiNxxEb8RglVcHg&key=php")]
     public class JobSpider : Spider.Spider
     {
-        List<string> FirmSelector = new List<string>();
-        List<string> SalarySelector = new List<string>();
-        List<string> TitleSelector = new List<string>();
-        List<string> TimeSelector = new List<string>();
         private string startingTime = DateTime.Now.ToString("yyyyMMddhhmm");
         public JobSpider()
         {
