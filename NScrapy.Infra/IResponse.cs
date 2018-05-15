@@ -10,7 +10,7 @@ namespace NScrapy.Infra
     {
         string URL { get; set; }
         IRequest Request { get; set; }
-        string ReponsePlanText { get; set; }
+        string ResponsePlanText { get; set; }
         HttpResponseMessage RawResponseMessage { get; set; }
         List<string> AcceptRanges { get; set; }
         List<ViaHeaderValue> Via { get; set; }

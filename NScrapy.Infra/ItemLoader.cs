@@ -6,20 +6,41 @@ using System.Text.RegularExpressions;
 namespace NScrapy.Infra
 {
     public class ItemLoader<T>
-        where T:class,new()
+        where T : class, new()
     {
+        public event Action<object, EventArgs> BeforeValueSetting;
+        public event Action<object, EventArgs> PostValueSetting;
+
         private IResponse _response = null;
 
         //TODO: later on we might replace the fieldMapping with a tree structure
-        private Dictionary<string, List<string>> fieldMapping;
+        private Dictionary<string, HashSet<string>> fieldMapping;
         private Regex cssSelectorReg = new Regex(@"(?<=css:)[\s\S]*");
         private Regex xPathSelectorReg = new Regex(@"(?<=xpath:)[\s\S]*");
-        public ItemLoader(IResponse response)
+        private Regex regSelectorReg = new Regex(@"(?<=reg:)[\s\S]*");
+
+        private static Dictionary<Type, object> registedItemLoader;
+        private ItemLoader(IResponse response)
         {
             this._response = response;
-            fieldMapping = new Dictionary<string, List<string>>();
+            fieldMapping = new Dictionary<string, HashSet<string>>();
         }
 
+        public static ItemLoader<TItemType> GetItemLoader<TItemType>(IResponse response)
+            where TItemType:class,new()
+        {
+            ItemLoader<TItemType> returnValue = null;
+            if (!registedItemLoader.ContainsKey(typeof(TItemType)))
+            {
+                returnValue= new ItemLoader<TItemType>(response);
+                registedItemLoader.Add(typeof(TItemType), returnValue);
+            }
+            else
+            {
+                returnValue = registedItemLoader[typeof(TItemType)] as ItemLoader<TItemType>;
+            }            
+            return returnValue;
+        }                
         /// <summary>
         /// 
         /// </summary>
@@ -31,9 +52,12 @@ namespace NScrapy.Infra
         {
             if(!fieldMapping.ContainsKey(fieldName))
             {
-                fieldMapping.Add(fieldName, new List<string>());                
+                fieldMapping.Add(fieldName, new HashSet<string>());                
             }
-            fieldMapping[fieldName].Add(mapping);
+            if(!fieldMapping[fieldName].Contains(mapping))
+            {
+                fieldMapping[fieldName].Add(mapping);
+            }            
         }
         
         public T LoadItem()
@@ -43,19 +67,33 @@ namespace NScrapy.Infra
             foreach(var property in properties)
             {
                 var maps = fieldMapping[property.Name];
+                Regex selectorReg = null;
+                string value = null;
                 foreach(var map in maps)
                 {
-                    if(cssSelectorReg.IsMatch(map))
+                    if (cssSelectorReg.IsMatch(map))
                     {
-                        var cssSelector=cssSelectorReg.Match(map).Value;
-                        var value=this._response.CssSelector(cssSelector).ExtractFirst();
-                        if(value==null)
+                        selectorReg = cssSelectorReg;
+                    }
+                    else if (xPathSelectorReg.IsMatch(map))
+                    {
+                        selectorReg = xPathSelectorReg;
+                    }
+                    else if (regSelectorReg.IsMatch(map))
+                    {
+                        throw new NotImplementedException("RegSelector not implemented");
+                    }
+                    if(selectorReg!=null)
+                    {
+                        var selector = selectorReg.Match(map).Value;
+                        value = this._response.CssSelector(selector).ExtractFirst();
+                        if (value == null)
                         {
                             NScrapyContext.CurrentContext.Log.Info($"Unable to get items from page {_response.URL} by selector {map}");
                             continue;
                         }
-                        property.SetValue(item, value);
-                    }
+                    }                   
+                    property.SetValue(item, value);
                 }
             }
             return item;

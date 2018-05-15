@@ -68,7 +68,7 @@ namespace NScrapy.Scheduler.RedisExt
                              callBackExcutedList.Add(callbackName, false);
                          }
                      }
-                     //Url Visted and coresponding call back already Executed before
+                    //Url Visted and coresponding call back already Executed before
                      if (u.Result &&
                         callBackExcutedList.ContainsKey(callbackName) &&
                         callBackExcutedList[callbackName] == true)

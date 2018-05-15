@@ -88,7 +88,7 @@ namespace NScrapy.Infra
 
         public string URL { get; set; }
 
-        public string ReponsePlanText
+        public string ResponsePlanText
         {
             get
             {
@@ -142,7 +142,7 @@ namespace NScrapy.Infra
                 //if matches  .job-info h3 a::attr(href), remove ::attr(href)
                 selector = selector.Replace($"::attr({attr})","");
             }
-            doc.LoadHtml(this.ReponsePlanText);
+            doc.LoadHtml(this.ResponsePlanText);
             var elements=doc.QuerySelectorAll(selector);
             return this.CreateFilteredResponse(elements);
         }
@@ -163,10 +163,17 @@ namespace NScrapy.Infra
 
         public IResponse XPathSelector(string xpath)
         {
-            //HtmlDocument doc = new HtmlDocument();
-            //doc.LoadHtml(this.ReponsePlanText);
-            //doc.DocumentNode.DescendantNodes("sojob-item-main").
-            throw new NotImplementedException();
+            doc.LoadHtml(this.ResponsePlanText);
+            HtmlNodeCollection elements = null;
+            var attrReg = new Regex(@"(?<=[\w]@)[\w]*");
+            var attrMatch = attrReg.Match(xpath);
+            if (attrMatch.Success)
+            {
+                attr = attrMatch.Value;
+                xpath = xpath.Replace($"@{attr}", "");
+            }
+            elements = doc.DocumentNode.SelectNodes(xpath);
+            return this.CreateFilteredResponse(elements);
         }
 
         public IEnumerable<string> Extract()
@@ -212,14 +219,16 @@ namespace NScrapy.Infra
 
         private HttpResponse CreateFilteredResponse(IList<HtmlNode> elements)
         {
-
-            foreach (var node in elements)
+            if (elements != null)
             {
-                strBuilder.AppendLine(node.OuterHtml);
+                foreach (var node in elements)
+                {
+                    strBuilder.AppendLine(node.OuterHtml);
+                }
             }
             var returnValue = new HttpResponse()
             {
-                ReponsePlanText = strBuilder.ToString(),
+                ResponsePlanText = strBuilder.ToString(),
                 Request = this.Request,
                 URL = this.URL
             };

@@ -135,7 +135,7 @@ namespace NScrapy.Downloader
             {
                 Request = request,
                 RawResponseMessage = responseMessage,
-                ReponsePlanText = await responseMessage.Content.ReadAsStringAsync(),
+                ResponsePlanText = await responseMessage.Content.ReadAsStringAsync(),
                 URL = request.URL
             };
             foreach (var middleware in this.Middlewares)
