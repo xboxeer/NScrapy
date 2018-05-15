@@ -40,8 +40,8 @@ namespace NScrapy.Infra
             builder.SetBasePath(Directory.GetCurrentDirectory()).AddJsonFile("appsetting.json");
             Configuration = builder.Build();
             Log = log4net.LogManager.GetLogger(this.GetType());
-            var logConfig = Properties.Resources.log4net;
-            using (var configStream = new MemoryStream(Encoding.UTF8.GetBytes(logConfig)))
+            var logConfig = File.ReadAllBytes(Path.Combine(Directory.GetCurrentDirectory(), "log4net.config")); //Properties.Resources.log4net;
+            using (var configStream = new MemoryStream(logConfig))
             {
                 XmlConfigurator.Configure(Log.Logger.Repository, configStream);
             }

@@ -59,7 +59,7 @@ namespace NScrapy.Test
             var response3 = Downloader.Downloader.SendRequestAsync(request3);
             var response4 = Downloader.Downloader.SendRequestAsync(request4);
             var response5 = Downloader.Downloader.SendRequestAsync(request5);
-            var result = response5.Result.ReponsePlanText;
+            var result = response5.Result.ResponsePlanText;
             //var html= Encoding.UTF8.GetString(Encoding.GetEncoding("ISO-8859-1").GetBytes(result.ResponseMessage.Content.ReadAsStringAsync().Result));
             sw.Stop();
             var timeCost = sw.ElapsedMilliseconds;
@@ -82,7 +82,7 @@ namespace NScrapy.Test
                 URL = "http://www.sina.com"
             };
             var response = Downloader.Downloader.SendRequestAsync(request);
-            Assert.IsTrue(response.Result.ReponsePlanText != null);
+            Assert.IsTrue(response.Result.ResponsePlanText != null);
         }
 
         [TestMethod]
