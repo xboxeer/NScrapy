@@ -74,25 +74,25 @@ namespace NScrapy.Infra
                     if (cssSelectorReg.IsMatch(map))
                     {
                         selectorReg = cssSelectorReg;
+                        var selector = selectorReg.Match(map).Value;
+                        value = this._response.CssSelector(selector).ExtractFirst();
                     }
                     else if (xPathSelectorReg.IsMatch(map))
                     {
                         selectorReg = xPathSelectorReg;
+                        var selector = selectorReg.Match(map).Value;
+                        value = this._response.CssSelector(selector).ExtractFirst();
                     }
                     else if (regSelectorReg.IsMatch(map))
                     {
                         throw new NotImplementedException("RegSelector not implemented");
                     }
-                    if(selectorReg!=null)
+                    if (value == null)
                     {
-                        var selector = selectorReg.Match(map).Value;
-                        value = this._response.CssSelector(selector).ExtractFirst();
-                        if (value == null)
-                        {
-                            NScrapyContext.CurrentContext.Log.Info($"Unable to get items from page {_response.URL} by selector {map}");
-                            continue;
-                        }
-                    }                   
+                        NScrapyContext.CurrentContext.Log.Info($"Unable to get items from page {_response.URL} by selector {map}");
+                        continue;
+                    }
+                                      
                     property.SetValue(item, value);
                 }
             }
