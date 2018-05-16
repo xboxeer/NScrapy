@@ -104,17 +104,15 @@ namespace NScrapy.Test
         [TestMethod]
         public void NScrapySuccessfullyExitTest()
         {
-            var logPath = Path.Combine(Directory.GetCurrentDirectory(), "log-file.txt");
-            if (File.Exists(logPath))
-            {
-                File.Delete(logPath);
-            }
+            string logPath = DeleteLog();
             Shell.NScrapy scrapy = NScrapy.Shell.NScrapy.GetInstance();
             scrapy.Crawl("UrlFilterTestSpider");
             //Make a copy of log file since the original log file is still in using by log4net
             string logFileContent = GetLogContent(logPath);
             Assert.IsTrue(logFileContent.Contains("https://www.liepin.com/zhaopin/?d_sfrom=search_fp_nvbar&init=1"));
-        }        
+        }
+
+       
 
         //This test case is actually not fully implemented, right now i just directly check the redis by using redis-cli to verify if the message has been published to topic 
         [TestMethod]        
@@ -140,10 +138,32 @@ namespace NScrapy.Test
         [TestMethod]
         public void PipelineTest()
         {
+            this.DeleteLog();
             Shell.NScrapy scrapy = NScrapy.Shell.NScrapy.GetInstance();            
             Shell.NScrapy.GetInstance().Crawl("PipelineTestSpider");
             var logContent = this.GetLogContent(Path.Combine(Directory.GetCurrentDirectory(), "log-file.txt"));
             Assert.IsTrue(logContent.Contains("Mock Pipeline Processed, Mock Value=Hello World"));
+            Assert.IsTrue(logContent.Contains("MockValue Mapped!"));
+        }
+
+        [TestMethod]
+        public void PipelineTestItemLoaderValueSetTest()
+        {
+            this.DeleteLog();
+            Shell.NScrapy scrapy = NScrapy.Shell.NScrapy.GetInstance();
+            Shell.NScrapy.GetInstance().Crawl("PipelineTestSpider");
+            var logContent = this.GetLogContent(Path.Combine(Directory.GetCurrentDirectory(), "log-file.txt"));
+            Assert.IsTrue(logContent.Contains("MockValue Mapped!"));
+        }
+
+        [TestMethod]
+        public void PipelineTestItemLoaderValueSetTest2()
+        {
+            this.DeleteLog();
+            Shell.NScrapy scrapy = NScrapy.Shell.NScrapy.GetInstance();
+            Shell.NScrapy.GetInstance().Crawl("PipelineTestSpider");
+            var logContent = this.GetLogContent(Path.Combine(Directory.GetCurrentDirectory(), "log-file.txt"));
+            Assert.IsTrue(logContent.Contains("MockValue2 Mapped!"));
         }
 
         private string GetLogContent(string logPath)
@@ -161,6 +181,17 @@ namespace NScrapy.Test
             }
             File.Delete(copiedLogFile);
             return logFileContent;
+        }
+
+        private string DeleteLog()
+        {
+            var logPath = Path.Combine(Directory.GetCurrentDirectory(), "log-file.txt");
+            if (File.Exists(logPath))
+            {
+                File.Delete(logPath);
+            }
+
+            return logPath;
         }
 
     }
@@ -306,8 +337,16 @@ namespace NScrapy.Test
         public void Parse(IResponse response)
         {
             //response.CssSelector(".job-info h3 a");
-            var item = ItemLoaderFactory.GetItemLoader<MockItem>(response);
-            item.LoadItem();
+            var MockItemLoader = ItemLoaderFactory.GetItemLoader<MockItem>(response);
+            MockItemLoader.BeforeValueSetting += MockItemLoader_BeforeValueSetting;
+            MockItemLoader.AddFieldMapping("MockValue", "MockValue Mapped!");
+            MockItemLoader.AddFieldMapping(u=>u.MockValue2,"MockValue2 Mapped!");
+            MockItemLoader.LoadItem();
+        }
+
+        private void MockItemLoader_BeforeValueSetting(object arg1, ValueSettingEventArgs<MockItem> arg2)
+        {
+            NScrapyContext.CurrentContext.Log.Info(arg2.Value);
         }
     }
 

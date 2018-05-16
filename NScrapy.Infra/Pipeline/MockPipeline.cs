@@ -23,5 +23,17 @@ namespace NScrapy.Infra.Pipeline
                 mockValue = value;
             }
         }
+
+        public string MockValue2
+        {
+            get
+            {
+                return "Hello World2";
+            }
+            set
+            {
+                mockValue = value;
+            }
+        }
     }
 }

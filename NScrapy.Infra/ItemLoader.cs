@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -9,8 +10,8 @@ namespace NScrapy.Infra
     public class ItemLoader<T>
         where T : class, new()
     {
-        public event Action<object, EventArgs> BeforeValueSetting;
-        public event Action<object, EventArgs> PostValueSetting;
+        public event Action<object, ValueSettingEventArgs<T>> BeforeValueSetting;
+        public event Action<object, ValueSettingEventArgs<T>> PostValueSetting;
 
         private IResponse _response = null;
 
@@ -29,8 +30,26 @@ namespace NScrapy.Infra
 
         internal void ClearEvent ()
         {
-            BeforeValueSetting = null;
-            PostValueSetting = null;
+            if (BeforeValueSetting != null)
+            {
+                BeforeValueSetting = null;
+            }
+            if (PostValueSetting != null)
+            {
+                PostValueSetting = null;
+            }
+        }
+        /// <summary>
+        /// Only support FirstLevel Property Visit at this moment like 
+        /// </summary>
+        /// <param name="fieldExpression"></param>
+        /// <param name="mapping"></param>
+        public void AddFieldMapping<TReturn>(Expression<Func<T,TReturn>> fieldExpression,string mapping)
+        {
+            var vistor = new MyExpVistor();
+            vistor.Visit(fieldExpression);
+            var fieldName = vistor.Field;
+            AddFieldMapping(fieldName, mapping);
         }
 
         /// <summary>
@@ -117,11 +136,22 @@ namespace NScrapy.Infra
         }
     }
 
+    class MyExpVistor:ExpressionVisitor
+    {
+        public string Field { get; set; }
+        protected override Expression VisitMember(MemberExpression node)
+        {
+            Field = node.Member.Name;
+            return base.VisitMember(node);
+        }
+    }
+
     public class ValueSettingEventArgs<T>:EventArgs
     {
         public T Item { get; set; }
         public string Value { get; set; }
         public string FieldName { get; set; }
     }
+
 
 }

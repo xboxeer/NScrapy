@@ -9,6 +9,13 @@ namespace NScrapy.Infra
     {
         private static Dictionary<Type, object> registedItemLoader = new Dictionary<Type, object>();
 
+        /// <summary>
+        /// For a particular TItemType, there will be only one ItemLoader instacne for it
+        /// GetItemLoader will automatically remove the Before/PostValueSetting event everytime you call it in case you are assigning event in a call back(which will result to duplicate event assigned to a particular ItemLoader)
+        /// </summary>
+        /// <typeparam name="TItemType"></typeparam>
+        /// <param name="response"></param>
+        /// <returns></returns>
         public static ItemLoader<TItemType> GetItemLoader<TItemType>(IResponse response)
             where TItemType : class, new()
         {
