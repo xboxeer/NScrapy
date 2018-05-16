@@ -18,4 +18,8 @@
     </None>
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Spiders\" />
+  </ItemGroup>
+
 </Project>

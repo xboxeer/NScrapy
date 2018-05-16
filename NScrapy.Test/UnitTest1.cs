@@ -2,6 +2,7 @@ using HtmlAgilityPack;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NScrapy.Infra;
 using NScrapy.Infra.Attributes.SpiderAttributes;
+using NScrapy.Infra.Pipeline;
 using NScrapy.Shell;
 using System;
 using System.Collections.Generic;
@@ -108,23 +109,12 @@ namespace NScrapy.Test
             {
                 File.Delete(logPath);
             }
-            Shell.NScrapy scrapy = NScrapy.Shell.NScrapy.GetInstance();            
+            Shell.NScrapy scrapy = NScrapy.Shell.NScrapy.GetInstance();
             scrapy.Crawl("UrlFilterTestSpider");
             //Make a copy of log file since the original log file is still in using by log4net
-            var copiedLogFile = Path.Combine(Directory.GetCurrentDirectory(), "log-file.test.txt");
-            File.Copy(logPath, copiedLogFile);
-            var logFileContent = string.Empty;
-            using (FileStream stream = File.OpenRead(copiedLogFile))
-            {
-                using (var ms = new MemoryStream())
-                {
-                    stream.CopyTo(ms);
-                    logFileContent = Encoding.UTF8.GetString(ms.ToArray());
-                }                
-            }
-            File.Delete(copiedLogFile);
+            string logFileContent = GetLogContent(logPath);
             Assert.IsTrue(logFileContent.Contains("https://www.liepin.com/zhaopin/?d_sfrom=search_fp_nvbar&init=1"));
-        }
+        }        
 
         //This test case is actually not fully implemented, right now i just directly check the redis by using redis-cli to verify if the message has been published to topic 
         [TestMethod]        
@@ -145,6 +135,32 @@ namespace NScrapy.Test
             t.Start();
             Shell.NScrapy.GetInstance().Crawl("JobSpider2");
             //Let's first start the individual Downloader by a thread
+        }
+
+        [TestMethod]
+        public void PipelineTest()
+        {
+            Shell.NScrapy scrapy = NScrapy.Shell.NScrapy.GetInstance();            
+            Shell.NScrapy.GetInstance().Crawl("PipelineTestSpider");
+            var logContent = this.GetLogContent(Path.Combine(Directory.GetCurrentDirectory(), "log-file.txt"));
+            Assert.IsTrue(logContent.Contains("Mock Pipeline Processed, Mock Value=Hello World"));
+        }
+
+        private string GetLogContent(string logPath)
+        {
+            var copiedLogFile = Path.Combine(Directory.GetCurrentDirectory(), "log-file.test.txt");
+            File.Copy(logPath, copiedLogFile);
+            var logFileContent = string.Empty;
+            using (FileStream stream = File.OpenRead(copiedLogFile))
+            {
+                using (var ms = new MemoryStream())
+                {
+                    stream.CopyTo(ms);
+                    logFileContent = Encoding.UTF8.GetString(ms.ToArray());
+                }
+            }
+            File.Delete(copiedLogFile);
+            return logFileContent;
         }
 
     }
@@ -171,6 +187,7 @@ namespace NScrapy.Test
             response.CssSelector(".job-info h3 a");
         }
     }
+
 
     [Name(Name = "JobSpider2")]
     [URL("https://www.liepin.com/zhaopin/?industries=&dqs=&salary=&jobKind=&pubTime=&compkind=&compscale=&industryType=&searchType=1&clean_condition=&isAnalysis=&init=1&sortFlag=15&flushckid=0&fromSearchBtn=1&headckid=0af8c9495882e6a7&d_headId=285a1c0df0556fc28874c7d7df42cf55&d_ckId=285a1c0df0556fc28874c7d7df42cf55&d_sfrom=search_fp&d_curPage=0&d_pageSize=40&siTag=9vh8n9z4s8Pwf5Px7ocSyQ~fA9rXquZc5IkJpXC-Ycixw&key=php")]
@@ -269,6 +286,31 @@ namespace NScrapy.Test
 
     }
 
+    [Name(Name = "PipelineTestSpider")]
+    [URL("https://www.liepin.com/zhaopin/?d_sfrom=search_fp_nvbar&init=1")]
+    public class PipelineTestSpider : Spider.Spider
+    {
+        public override void ResponseHandler(IResponse response)
+        {
+            var httpResponse = response as HttpResponse;
+            var returnValue = response.CssSelector(".job-info h3 a::attr(href)") as HttpResponse;
+            var hrefs = returnValue.Extract();
+            foreach (var href in hrefs)
+            {
+                NScrapy.Shell.NScrapy.GetInstance().Request(href, Parse);
+            }
+            //var parser = new HtmlParser();
+            //var result=parser.Parse(response.ReponsePlanText);
+        }
+
+        public void Parse(IResponse response)
+        {
+            //response.CssSelector(".job-info h3 a");
+            var item = ItemLoaderFactory.GetItemLoader<MockItem>(response);
+            item.LoadItem();
+        }
+    }
+
     [Name(Name = "UrlFilterTestSpider")]
     [URL("https://www.liepin.com/zhaopin/?d_sfrom=search_fp_nvbar&init=1")]
     public class ImageSpider : Spider.Spider
@@ -278,4 +320,6 @@ namespace NScrapy.Test
             NScrapy.Shell.NScrapy.GetInstance().Request(response.URL,null);
         }
     }
+
+
 }

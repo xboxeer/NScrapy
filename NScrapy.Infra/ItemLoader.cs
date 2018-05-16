@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -18,29 +19,20 @@ namespace NScrapy.Infra
         private Regex cssSelectorReg = new Regex(@"(?<=css:)[\s\S]*");
         private Regex xPathSelectorReg = new Regex(@"(?<=xpath:)[\s\S]*");
         private Regex regSelectorReg = new Regex(@"(?<=reg:)[\s\S]*");
-
-        private static Dictionary<Type, object> registedItemLoader;
-        private ItemLoader(IResponse response)
+        internal List<IPipeline<T>> pipelines = new List<IPipeline<T>>();
+        
+        internal ItemLoader(IResponse response)
         {
             this._response = response;
             fieldMapping = new Dictionary<string, HashSet<string>>();
         }
 
-        public static ItemLoader<TItemType> GetItemLoader<TItemType>(IResponse response)
-            where TItemType:class,new()
+        internal void ClearEvent ()
         {
-            ItemLoader<TItemType> returnValue = null;
-            if (!registedItemLoader.ContainsKey(typeof(TItemType)))
-            {
-                returnValue= new ItemLoader<TItemType>(response);
-                registedItemLoader.Add(typeof(TItemType), returnValue);
-            }
-            else
-            {
-                returnValue = registedItemLoader[typeof(TItemType)] as ItemLoader<TItemType>;
-            }            
-            return returnValue;
-        }                
+            BeforeValueSetting = null;
+            PostValueSetting = null;
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -66,6 +58,10 @@ namespace NScrapy.Infra
             var properties = typeof(T).GetProperties();
             foreach(var property in properties)
             {
+                if(!fieldMapping.ContainsKey(property.Name))
+                {
+                    continue;
+                }
                 var maps = fieldMapping[property.Name];
                 Regex selectorReg = null;
                 string value = null;
@@ -81,22 +77,51 @@ namespace NScrapy.Infra
                     {
                         selectorReg = xPathSelectorReg;
                         var selector = selectorReg.Match(map).Value;
-                        value = this._response.CssSelector(selector).ExtractFirst();
+                        value = this._response.XPathSelector(selector).ExtractFirst();
                     }
                     else if (regSelectorReg.IsMatch(map))
                     {
                         throw new NotImplementedException("RegSelector not implemented");
+                    }
+                    else
+                    {
+                        value = map;
                     }
                     if (value == null)
                     {
                         NScrapyContext.CurrentContext.Log.Info($"Unable to get items from page {_response.URL} by selector {map}");
                         continue;
                     }
-                                      
+                    var eventArg = new ValueSettingEventArgs<T>()
+                    {
+                        Item = item,
+                        Value = value,
+                        FieldName = property.Name
+                    };
+                    if (BeforeValueSetting!=null)
+                    {                        
+                        BeforeValueSetting(this, eventArg);
+                    }
                     property.SetValue(item, value);
+                    if (PostValueSetting != null)
+                    {
+                        PostValueSetting(this, eventArg);
+                    }
                 }
+            }
+            foreach(var pipeline in this.pipelines)
+            {
+                pipeline.ProcessItem(item, NScrapyContext.CurrentContext.CurrentSpider);
             }
             return item;
         }
     }
+
+    public class ValueSettingEventArgs<T>:EventArgs
+    {
+        public T Item { get; set; }
+        public string Value { get; set; }
+        public string FieldName { get; set; }
+    }
+
 }
