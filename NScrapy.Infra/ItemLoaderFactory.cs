@@ -32,6 +32,7 @@ namespace NScrapy.Infra
             List<IPipeline<TItemType>> itemPipelines = GetPipelines<TItemType>();
             returnValue.pipelines = itemPipelines;
             returnValue.ClearEvent();
+            returnValue._response = response;
             return returnValue;
         }
 

@@ -13,7 +13,7 @@ namespace NScrapy.Infra
         public event Action<object, ValueSettingEventArgs<T>> BeforeValueSetting;
         public event Action<object, ValueSettingEventArgs<T>> PostValueSetting;
 
-        private IResponse _response = null;
+        internal IResponse _response = null;
 
         //TODO: later on we might replace the fieldMapping with a tree structure
         private Dictionary<string, HashSet<string>> fieldMapping;
@@ -121,7 +121,7 @@ namespace NScrapy.Infra
                     {                        
                         BeforeValueSetting(this, eventArg);
                     }
-                    property.SetValue(item, value);
+                    property.SetValue(item, eventArg.Value);
                     if (PostValueSetting != null)
                     {
                         PostValueSetting(this, eventArg);

@@ -17,6 +17,9 @@
         "RemovedMiddleware": "test3"
       }
     ],
+    "Pipelines": [
+      { "Pipeline": "NScrapy.Project.MongoItemPipeline" }
+    ],
     "DownloaderPoolCapbility": 4,
     "HttpHeader": {
       "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
