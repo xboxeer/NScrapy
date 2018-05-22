@@ -19,11 +19,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Spiders\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="MongoDB.Driver" Version="2.6.1" />
   </ItemGroup>
+
+  <ProjectExtensions><VisualStudio><UserProperties /></VisualStudio></ProjectExtensions>
 
 </Project>

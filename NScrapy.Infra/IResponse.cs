@@ -31,13 +31,19 @@ namespace NScrapy.Infra
         CacheControlHeaderValue CacheControl { get; set; }
         TimeSpan? Age { get; set; }
         List<WarningHeaderValue> Warning { get; set; }
-        List<AuthenticationHeaderValue> WwwAuthenticate { get; set; }
+        List<AuthenticationHeaderValue> WwwAuthenticate { get; set; }        
 
-        IResponse CssSelector(string selector);
-        IResponse CssSelector(IEnumerable<string> possableSelector);
+        IResponse CssSelector(string selector, Predicate<ExtractArgs> filter=null);
+        IResponse CssSelector(IEnumerable<string> possableSelector,Predicate<ExtractArgs> filter=null);
         IResponse XPathSelector(string xpath);
         IEnumerable<string> Extract();        
         string ExtractFirst();
         string ExtractLast();
+    }
+
+    public class ExtractArgs : EventArgs
+    {
+        public string ExtractedValue { get; set; }
+        public string ExtractAgainstAttr { get; set; }
     }
 }

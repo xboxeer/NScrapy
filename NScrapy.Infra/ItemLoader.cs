@@ -17,15 +17,18 @@ namespace NScrapy.Infra
 
         //TODO: later on we might replace the fieldMapping with a tree structure
         private Dictionary<string, HashSet<string>> fieldMapping;
+        private Dictionary<PropertyInfo, HashSet<string>> fieldMappingCache;
         private Regex cssSelectorReg = new Regex(@"(?<=css:)[\s\S]*");
         private Regex xPathSelectorReg = new Regex(@"(?<=xpath:)[\s\S]*");
         private Regex regSelectorReg = new Regex(@"(?<=reg:)[\s\S]*");
         internal List<IPipeline<T>> pipelines = new List<IPipeline<T>>();
+        private bool fieldMapped = false;
         
         internal ItemLoader(IResponse response)
         {
             this._response = response;
             fieldMapping = new Dictionary<string, HashSet<string>>();
+            fieldMappingCache = new Dictionary<PropertyInfo, HashSet<string>>();
         }
 
         internal void ClearEvent ()
@@ -46,10 +49,13 @@ namespace NScrapy.Infra
         /// <param name="mapping"></param>
         public void AddFieldMapping<TReturn>(Expression<Func<T,TReturn>> fieldExpression,string mapping)
         {
-            var vistor = new MyExpVistor();
-            vistor.Visit(fieldExpression);
-            var fieldName = vistor.Field;
-            AddFieldMapping(fieldName, mapping);
+            if (!fieldMapped)
+            {
+                var vistor = new MyExpVistor();
+                vistor.Visit(fieldExpression);
+                var fieldName = vistor.Field;
+                AddFieldMapping(fieldName, mapping);
+            }
         }
 
         /// <summary>
@@ -61,78 +67,99 @@ namespace NScrapy.Infra
         /// for direct valueMapping, directly use the value</param>
         public void AddFieldMapping(string fieldName,string mapping)
         {
-            if(!fieldMapping.ContainsKey(fieldName))
+            if (!fieldMapped)
             {
-                fieldMapping.Add(fieldName, new HashSet<string>());                
+                if (!fieldMapping.ContainsKey(fieldName))
+                {
+                    fieldMapping.Add(fieldName, new HashSet<string>());
+                }
+                if (!fieldMapping[fieldName].Contains(mapping))
+                {
+                    fieldMapping[fieldName].Add(mapping);
+                }
             }
-            if(!fieldMapping[fieldName].Contains(mapping))
-            {
-                fieldMapping[fieldName].Add(mapping);
-            }            
         }
         
         public T LoadItem()
         {
             T item = new T();
-            var properties = typeof(T).GetProperties();
-            foreach(var property in properties)
+            if (!fieldMapped)
             {
-                if(!fieldMapping.ContainsKey(property.Name))
+                var properties = typeof(T).GetProperties();            
+                foreach (var property in properties)
                 {
-                    continue;
-                }
-                var maps = fieldMapping[property.Name];
-                Regex selectorReg = null;
-                string value = null;
-                foreach(var map in maps)
-                {
-                    if (cssSelectorReg.IsMatch(map))
+                    if (!fieldMapping.ContainsKey(property.Name))
                     {
-                        selectorReg = cssSelectorReg;
-                        var selector = selectorReg.Match(map).Value;
-                        value = this._response.CssSelector(selector).ExtractFirst();
-                    }
-                    else if (xPathSelectorReg.IsMatch(map))
-                    {
-                        selectorReg = xPathSelectorReg;
-                        var selector = selectorReg.Match(map).Value;
-                        value = this._response.XPathSelector(selector).ExtractFirst();
-                    }
-                    else if (regSelectorReg.IsMatch(map))
-                    {
-                        throw new NotImplementedException("RegSelector not implemented");
-                    }
-                    else
-                    {
-                        value = map;
-                    }
-                    if (value == null)
-                    {
-                        NScrapyContext.CurrentContext.Log.Info($"Unable to get items from page {_response.URL} by selector {map}");
                         continue;
                     }
-                    var eventArg = new ValueSettingEventArgs<T>()
-                    {
-                        Item = item,
-                        Value = value,
-                        FieldName = property.Name
-                    };
-                    if (BeforeValueSetting!=null)
-                    {                        
-                        BeforeValueSetting(this, eventArg);
-                    }
-                    property.SetValue(item, eventArg.Value);
-                    if (PostValueSetting != null)
-                    {
-                        PostValueSetting(this, eventArg);
-                    }
+                    var maps = fieldMapping[property.Name];
+                    fieldMappingCache.Add(property, maps);
+                    SetValueForProperty(item, property, maps);
                 }
             }
-            foreach(var pipeline in this.pipelines)
+            else
+            {
+                foreach(var property in fieldMappingCache.Keys)
+                {
+                    var maps = fieldMappingCache[property];
+                    SetValueForProperty(item, property, maps);
+                }
+            }
+            foreach (var pipeline in this.pipelines)
             {
                 pipeline.ProcessItem(item, NScrapyContext.CurrentContext.CurrentSpider);
             }
+            fieldMapped = true;
             return item;
+        }
+
+        private void SetValueForProperty(T item, PropertyInfo property, HashSet<string> maps)
+        {
+            Regex selectorReg = null;
+            string value = null;
+            foreach (var map in maps)
+            {
+                if (cssSelectorReg.IsMatch(map))
+                {
+                    selectorReg = cssSelectorReg;
+                    var selector = selectorReg.Match(map).Value;
+                    value = this._response.CssSelector(selector).ExtractFirst();
+                }
+                else if (xPathSelectorReg.IsMatch(map))
+                {
+                    selectorReg = xPathSelectorReg;
+                    var selector = selectorReg.Match(map).Value;
+                    value = this._response.XPathSelector(selector).ExtractFirst();
+                }
+                else if (regSelectorReg.IsMatch(map))
+                {
+                    throw new NotImplementedException("RegSelector not implemented");
+                }
+                else
+                {
+                    value = map;
+                }
+                if (value == null)
+                {
+                    NScrapyContext.CurrentContext.Log.Info($"Unable to get items from page {_response.URL} by selector {map}");
+                    continue;
+                }
+                var eventArg = new ValueSettingEventArgs<T>()
+                {
+                    Item = item,
+                    Value = value,
+                    FieldName = property.Name
+                };
+                if (BeforeValueSetting != null)
+                {
+                    BeforeValueSetting(this, eventArg);
+                }
+                property.SetValue(item, eventArg.Value);
+                if (PostValueSetting != null)
+                {
+                    PostValueSetting(this, eventArg);
+                }
+            }
         }
     }
 

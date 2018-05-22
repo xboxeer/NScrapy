@@ -113,7 +113,7 @@ namespace NScrapy.Scheduler.RedisExt
                 }
                 catch (Exception ex)
                 {
-                    NScrapyContext.CurrentContext.Log.Error($"Error processing {responseMessage.URL} with Handler {responseMessage.CallbacksFingerprint}", ex);
+                    NScrapyContext.CurrentContext.Log.Error($"Error getting value from Redis", ex);
                 }
                 finally
                 {

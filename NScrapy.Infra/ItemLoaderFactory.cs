@@ -8,7 +8,7 @@ namespace NScrapy.Infra
     public class ItemLoaderFactory
     {
         private static Dictionary<Type, object> registedItemLoader = new Dictionary<Type, object>();
-
+        private static object lockObj = new object();
         /// <summary>
         /// For a particular TItemType, there will be only one ItemLoader instacne for it
         /// GetItemLoader will automatically remove the Before/PostValueSetting event everytime you call it in case you are assigning event in a call back(which will result to duplicate event assigned to a particular ItemLoader)
@@ -19,21 +19,24 @@ namespace NScrapy.Infra
         public static ItemLoader<TItemType> GetItemLoader<TItemType>(IResponse response)
             where TItemType : class, new()
         {
-            ItemLoader<TItemType> returnValue = null;
-            if (!registedItemLoader.ContainsKey(typeof(TItemType)))
+            lock (lockObj)
             {
-                returnValue = new ItemLoader<TItemType>(response);
-                registedItemLoader.Add(typeof(TItemType), returnValue);
+                ItemLoader<TItemType> returnValue = null;
+                if (!registedItemLoader.ContainsKey(typeof(TItemType)))
+                {
+                    returnValue = new ItemLoader<TItemType>(response);
+                    registedItemLoader.Add(typeof(TItemType), returnValue);
+                    List<IPipeline<TItemType>> itemPipelines = GetPipelines<TItemType>();
+                    returnValue.pipelines = itemPipelines;
+                }
+                else
+                {
+                    returnValue = registedItemLoader[typeof(TItemType)] as ItemLoader<TItemType>;
+                }                
+                returnValue.ClearEvent();
+                returnValue._response = response;
+                return returnValue;
             }
-            else
-            {
-                returnValue = registedItemLoader[typeof(TItemType)] as ItemLoader<TItemType>;
-            }
-            List<IPipeline<TItemType>> itemPipelines = GetPipelines<TItemType>();
-            returnValue.pipelines = itemPipelines;
-            returnValue.ClearEvent();
-            returnValue._response = response;
-            return returnValue;
         }
 
         private static List<IPipeline<TItemType>> GetPipelines<TItemType>() where TItemType : class, new()

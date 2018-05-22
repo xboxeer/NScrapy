@@ -21,7 +21,7 @@ namespace NScrapy.Infra
         private string reponsePlanText = string.Empty;
         private string attr = string.Empty;
         private HttpResponseMessage rawResponse;
-        private HtmlDocument doc = new HtmlDocument();
+        private HtmlDocument doc = new HtmlDocument();        
         #region Manually these field beacuse HttpResponseHeader can not be Serialized by JsonConvert
         private List<string> acceptRanges;
         private List<ViaHeaderValue> via;
@@ -42,7 +42,7 @@ namespace NScrapy.Infra
         private CacheControlHeaderValue cacheControl;
         private TimeSpan? age;
         private List<WarningHeaderValue> warning;
-        private List<AuthenticationHeaderValue> wwwAuthenticate;
+        private List<AuthenticationHeaderValue> wwwAuthenticate;        
         #endregion
 
         #region Ignored Property While JsonFormat.SerializeObject
@@ -100,6 +100,7 @@ namespace NScrapy.Infra
                 doc.LoadHtml(value);
             }
         }
+
         #region HttpResponseHeader Properties
         //Manually create these field beacuse HttpResponseHeader can not be Serialized by JsonConvert
         public List<string> AcceptRanges { get => acceptRanges; set => acceptRanges = value; }
@@ -132,7 +133,7 @@ namespace NScrapy.Infra
         /// </summary>
         /// <param name="selector">selecter sample: .class div a::attr(href)</param>
         /// <returns></returns>
-        public IResponse CssSelector(string selector)
+        public IResponse CssSelector(string selector,Predicate<ExtractArgs> filter=null)
         {            
             var attrReg = new Regex(@"(?<=::attr\()[^()]*(?=\))");
             var attrMatch = attrReg.Match(selector);
@@ -144,15 +145,15 @@ namespace NScrapy.Infra
             }
             doc.LoadHtml(this.ResponsePlanText);
             var elements=doc.QuerySelectorAll(selector);
-            return this.CreateFilteredResponse(elements);
+            return this.CreateFilteredResponse(elements, filter);
         }
 
-        public IResponse CssSelector(IEnumerable<string> possableSelector)
+        public IResponse CssSelector(IEnumerable<string> possableSelector, Predicate<ExtractArgs> filter=null)
         {
             IResponse returnValue = null;
             foreach (var selector in possableSelector)
             {
-                returnValue = this.CssSelector(selector);
+                returnValue = this.CssSelector(selector,filter);
                 if(returnValue.ExtractFirst()!=null)
                 {
                     break;
@@ -178,32 +179,36 @@ namespace NScrapy.Infra
 
         public IEnumerable<string> Extract()
         {
-            var returnValue = new List<string>();
             var attrValueRegPattern = string.Empty;
             if(attr!=string.Empty)
             {
                 attrValueRegPattern = $"(?<={attr}=\\s*['\"]+)[^'\"]*(?=['\"]+)";
             }
-            foreach(var item in doc.DocumentNode.ChildNodes)
+            foreach (var item in doc.DocumentNode.ChildNodes)
             {
-                if(item.OuterHtml==string.Empty||
-                    item.OuterHtml==System.Environment.NewLine)
+                var value = string.Empty;
+                if (item.OuterHtml == string.Empty ||
+                    item.OuterHtml == System.Environment.NewLine)
                 {
                     continue;
                 }
                 if (attr == string.Empty)
-                {                     
-                    yield return item.OuterHtml;
-                }
-                else if(attr=="text")
                 {
-                    yield return item.InnerText;
+                    value = item.OuterHtml;
+                }
+                else if (attr == "text")
+                {
+                    value = item.InnerText;
                 }
                 else
                 {
                     var attrValueMatch = new Regex(attrValueRegPattern);
-                    yield return attrValueMatch.Match(item.OuterHtml).Value;
+                    value = attrValueMatch.Match(item.OuterHtml).Value;
                 }
+
+
+                yield return value;
+
             }
         }
 
@@ -217,13 +222,26 @@ namespace NScrapy.Infra
             return this.Extract().LastOrDefault();
         }
 
-        private HttpResponse CreateFilteredResponse(IList<HtmlNode> elements)
+        private HttpResponse CreateFilteredResponse(IList<HtmlNode> elements,Predicate<ExtractArgs> filter=null)
         {
             if (elements != null)
             {
                 foreach (var node in elements)
-                {
-                    strBuilder.AppendLine(node.OuterHtml);
+                {                                       
+                    var doExtract = true;
+                    if(filter!=null)
+                    {
+                        var e = new ExtractArgs()
+                        {
+                            ExtractedValue = node.OuterHtml,
+                            ExtractAgainstAttr = string.IsNullOrEmpty(attr) ? null : attr
+                        };
+                        doExtract = filter(e);
+                    }                    
+                    if (doExtract)
+                    {
+                        strBuilder.AppendLine(node.OuterHtml);
+                    }
                 }
             }
             var returnValue = new HttpResponse()
@@ -237,9 +255,7 @@ namespace NScrapy.Infra
             return returnValue;
         }
 
-        public void InitHeaderProperties()
-        {
-
-        }
     }
+
+    
 }

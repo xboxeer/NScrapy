@@ -1,10 +1,10 @@
 ﻿{
   "AppSettings": {
-    //"Scheduler": {
-    //  "SchedulerType": "NScrapy.Scheduler.RedisExt.RedisScheduler"
-    //},
+    "Scheduler": {
+      "SchedulerType": "NScrapy.Scheduler.RedisExt.RedisScheduler"
+    },
     "Scheduler.RedisExt": {
-      "RedisServer": "192.168.0.105",
+      "RedisServer": "192.168.0.106",
       "RedisPort": "6379",
       "ReceiverQueue": "NScrapy.Downloader",
       "ResponseQueue": "NScrapy.ResponseQueue"
@@ -18,9 +18,10 @@
       }
     ],
     "Pipelines": [
-      { "Pipeline": "NScrapy.Project.MongoItemPipeline" }
+      //{ "Pipeline": "NScrapy.Project.MongoItemPipeline" },
+      { "Pipeline": "NScrapy.Project.CSVItemPipeline" }
     ],
-    "DownloaderPoolCapbility": 4,
+    "DownloaderPoolCapbility": 1000,
     "HttpHeader": {
       "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
       "Accept-Encoding": "gzip,deflate",
