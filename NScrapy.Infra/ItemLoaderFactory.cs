@@ -1,14 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Linq;
 using System.Text;
 
 namespace NScrapy.Infra
 {
     public class ItemLoaderFactory
     {
-        private static Dictionary<Type, object> registedItemLoader = new Dictionary<Type, object>();
+        //private static Dictionary<Type, object> registedItemLoader = new Dictionary<Type, object>();
         private static object lockObj = new object();
+        private static Dictionary<string, List<object>> itemLoaderPool = new Dictionary<string, List<object>>();
+        private static Dictionary<string, object> registedPipelines = new Dictionary<string, object>();
         /// <summary>
         /// For a particular TItemType, there will be only one ItemLoader instacne for it
         /// GetItemLoader will automatically remove the Before/PostValueSetting event everytime you call it in case you are assigning event in a call back(which will result to duplicate event assigned to a particular ItemLoader)
@@ -22,17 +25,35 @@ namespace NScrapy.Infra
             lock (lockObj)
             {
                 ItemLoader<TItemType> returnValue = null;
-                if (!registedItemLoader.ContainsKey(typeof(TItemType)))
+                //if (!registedItemLoader.ContainsKey(typeof(TItemType)))
+                //{
+                //    returnValue = new ItemLoader<TItemType>(response);
+                //    registedItemLoader.Add(typeof(TItemType), returnValue);
+                //    List<IPipeline<TItemType>> itemPipelines = GetPipelines<TItemType>();
+                //    returnValue.pipelines = itemPipelines;
+                //}
+                //else
+                //{
+                //    returnValue = registedItemLoader[typeof(TItemType)] as ItemLoader<TItemType>;
+                //}     
+                //Check if we have ItemLoader instance for TItemType
+                if (!itemLoaderPool.ContainsKey(typeof(TItemType).FullName))
+                {
+                    itemLoaderPool.Add(typeof(TItemType).FullName, new List<object>());
+                }
+
+                //Check if we have idel ItemLoader
+                var idelItemLoader = itemLoaderPool[typeof(TItemType).FullName].Where(loader => (loader as ItemLoader<TItemType>).Status == ItemLoaderStatus.Idel).FirstOrDefault();
+                returnValue = idelItemLoader as ItemLoader<TItemType>;
+                if (returnValue == null)
                 {
                     returnValue = new ItemLoader<TItemType>(response);
-                    registedItemLoader.Add(typeof(TItemType), returnValue);
                     List<IPipeline<TItemType>> itemPipelines = GetPipelines<TItemType>();
                     returnValue.pipelines = itemPipelines;
+                    itemLoaderPool[typeof(TItemType).FullName].Add(returnValue as object);
                 }
-                else
-                {
-                    returnValue = registedItemLoader[typeof(TItemType)] as ItemLoader<TItemType>;
-                }                
+
+                returnValue.Status = ItemLoaderStatus.Running;
                 returnValue.ClearEvent();
                 returnValue._response = response;
                 return returnValue;
@@ -41,6 +62,10 @@ namespace NScrapy.Infra
 
         private static List<IPipeline<TItemType>> GetPipelines<TItemType>() where TItemType : class, new()
         {
+            if(registedPipelines.ContainsKey(typeof(TItemType).FullName))
+            {
+                return registedPipelines[typeof(TItemType).FullName] as List<IPipeline<TItemType>>;
+            }
             var returnValue = new List<IPipeline<TItemType>>();
             var appAssembly = Assembly.GetEntryAssembly();
             var currentAssembly = Assembly.GetExecutingAssembly();
@@ -68,6 +93,7 @@ namespace NScrapy.Infra
                     returnValue.Add(pipline);
                 }
             }
+            registedPipelines.Add(typeof(TItemType).FullName, returnValue as object);
             return returnValue;
         }
     }

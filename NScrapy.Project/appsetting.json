@@ -18,8 +18,8 @@
       }
     ],
     "Pipelines": [
-      //{ "Pipeline": "NScrapy.Project.MongoItemPipeline" },
-      { "Pipeline": "NScrapy.Project.CSVItemPipeline" }
+      { "Pipeline": "NScrapy.Project.MongoItemPipeline" }
+      //{ "Pipeline": "NScrapy.Project.CSVItemPipeline" }
     ],
     "DownloaderPoolCapbility": 1000,
     "HttpHeader": {

@@ -12,6 +12,7 @@ namespace NScrapy.Infra
     {
         public event Action<object, ValueSettingEventArgs<T>> BeforeValueSetting;
         public event Action<object, ValueSettingEventArgs<T>> PostValueSetting;
+        
 
         internal IResponse _response = null;
 
@@ -23,7 +24,9 @@ namespace NScrapy.Infra
         private Regex regSelectorReg = new Regex(@"(?<=reg:)[\s\S]*");
         internal List<IPipeline<T>> pipelines = new List<IPipeline<T>>();
         private bool fieldMapped = false;
-        
+        private object lockObj = new object();
+
+        public ItemLoaderStatus Status { get; set; }
         internal ItemLoader(IResponse response)
         {
             this._response = response;
@@ -67,15 +70,18 @@ namespace NScrapy.Infra
         /// for direct valueMapping, directly use the value</param>
         public void AddFieldMapping(string fieldName,string mapping)
         {
-            if (!fieldMapped)
+            lock (lockObj)
             {
-                if (!fieldMapping.ContainsKey(fieldName))
+                if (!fieldMapped)
                 {
-                    fieldMapping.Add(fieldName, new HashSet<string>());
-                }
-                if (!fieldMapping[fieldName].Contains(mapping))
-                {
-                    fieldMapping[fieldName].Add(mapping);
+                    if (!fieldMapping.ContainsKey(fieldName))
+                    {
+                        fieldMapping.Add(fieldName, new HashSet<string>());
+                    }
+                    if (!fieldMapping[fieldName].Contains(mapping))
+                    {
+                        fieldMapping[fieldName].Add(mapping);
+                    }
                 }
             }
         }
@@ -83,33 +89,51 @@ namespace NScrapy.Infra
         public T LoadItem()
         {
             T item = new T();
-            if (!fieldMapped)
+            try
             {
-                var properties = typeof(T).GetProperties();            
-                foreach (var property in properties)
+                Status = ItemLoaderStatus.Running;
+                if (!fieldMapped)
                 {
-                    if (!fieldMapping.ContainsKey(property.Name))
+                    var properties = typeof(T).GetProperties();
+                    foreach (var property in properties)
                     {
-                        continue;
+                        if (!fieldMapping.ContainsKey(property.Name))
+                        {
+                            continue;
+                        }
+                        var maps = fieldMapping[property.Name];
+                        lock (fieldMappingCache)
+                        {
+                            if (!fieldMappingCache.ContainsKey(property))
+                            {
+                                fieldMappingCache.Add(property, maps);
+                            }
+                        }
+                        SetValueForProperty(item, property, maps);
                     }
-                    var maps = fieldMapping[property.Name];
-                    fieldMappingCache.Add(property, maps);
-                    SetValueForProperty(item, property, maps);
                 }
-            }
-            else
-            {
-                foreach(var property in fieldMappingCache.Keys)
+                else
                 {
-                    var maps = fieldMappingCache[property];
-                    SetValueForProperty(item, property, maps);
+                    foreach (var property in fieldMappingCache.Keys)
+                    {
+                        var maps = fieldMappingCache[property];
+                        SetValueForProperty(item, property, maps);
+                    }
                 }
+                foreach (var pipeline in this.pipelines)
+                {
+                    pipeline.ProcessItem(item, NScrapyContext.CurrentContext.CurrentSpider);
+                }
+                fieldMapped = true;
             }
-            foreach (var pipeline in this.pipelines)
+            catch(Exception ex)
             {
-                pipeline.ProcessItem(item, NScrapyContext.CurrentContext.CurrentSpider);
+                NScrapyContext.CurrentContext.Log.Error($"Load Item {typeof(T).ToString()} failed", ex);
             }
-            fieldMapped = true;
+            finally
+            {
+                Status = ItemLoaderStatus.Idel;
+            }
             return item;
         }
 
@@ -180,5 +204,10 @@ namespace NScrapy.Infra
         public string FieldName { get; set; }
     }
 
+    public enum ItemLoaderStatus
+    {
+        Running,
+        Idel
+    }
 
 }

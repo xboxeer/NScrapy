@@ -58,7 +58,14 @@ namespace NScrapy.Scheduler.RedisExt
 
         public void ReleaseLock(string lockKey, string keyToken)
         {
-            Connection.GetDatabase().LockRelease(lockKey, keyToken);
+            try
+            {
+                Connection.GetDatabase().LockRelease(lockKey, keyToken);
+            }
+            catch(Exception ex)
+            {
+
+            }
         }
     }
 }

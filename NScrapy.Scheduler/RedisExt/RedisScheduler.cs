@@ -128,8 +128,9 @@ namespace NScrapy.Scheduler.RedisExt
                 {
                     var callback = registedCallback[responseMessage.CallbacksFingerprint];
                     var response = NScrapyHelper.DecompressResponse(responseMessage.Payload);
-                    callback(response);
-                    callBackExcutedList[responseMessage.CallbacksFingerprint] = true;
+                    var task = new Task(()=>callback(response));
+                    task.ContinueWith(t => callBackExcutedList[responseMessage.CallbacksFingerprint] = true);
+                    task.Start();
                 }                
             }
         }

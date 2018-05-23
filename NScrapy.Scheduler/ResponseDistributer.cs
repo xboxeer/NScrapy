@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace NScrapy.Scheduler
 {
@@ -38,14 +39,19 @@ namespace NScrapy.Scheduler
                             continue;
                         }
                         var callBack = response.Request.Callback;
-                        if (callBack == null)
-                        {
-                            response.Request.RequestSpider.ResponseHandler(response);
-                        }
-                        else
-                        {
-                            response.Request.Callback(response);
-                        }
+                        var callBackTask = new Task(() =>
+                          {
+                              if (callBack == null)
+                              {
+                                  response.Request.RequestSpider.ResponseHandler(response);
+                              }
+                              else
+                              {
+                                  response.Request.Callback(response);
+                              }
+                          });
+                        callBackTask.Start();
+                        
                     }
                 }
             }
