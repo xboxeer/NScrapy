@@ -16,16 +16,10 @@ namespace NScrapy.Scheduler.RedisExt
     {
         private Dictionary<string, IRequest> requests = new Dictionary<string, IRequest>();
         private Dictionary<string, Action<IResponse>> registedCallback = new Dictionary<string, Action<IResponse>>();
-        //当有好几个爬虫在运行的时候 由于UrlFilter机制 后加入的爬虫会没有机会爬最开始的网页 导致回调函数无法注册到Scheduler里面
-        //进而导致消息队列发消息回来的时候 后加入的爬虫根本没有机会执行任何操作（因为消息队列中指定的回调函数指纹根本没有注册到Scheduler中）
-        //因此加入一个字典 callBackExcutedList 来记录回调函数是否有被执行过，如果没有被执行过 那么忽略UrlFilter的结果 强制再爬一遍这个网页
-        //这样可以确保对于每个单独运行的爬虫，所有回调函数都被注册到了
-        //这个机制的坏处是假如有100个爬虫 每个爬虫有10个方法回调，那么总共会有100*10条重复数据（如果每个回调方法都产生数据记录的话）
-        //然而实际中这样的情况应该不多 
-        private Dictionary<string, bool> callBackExcutedList = new Dictionary<string, bool>();
         private string defaultCallbackName = string.Empty;
+        private bool callBacksRegistered = false;
         public IUrlFilter UrlFilter { get; set; }
-
+        
         public RedisScheduler()
         {
             ResponseDistributer.StartDistribuiter();
@@ -34,12 +28,13 @@ namespace NScrapy.Scheduler.RedisExt
             t.Name = "ResponseDistributeThread";
             t.Start();
             UrlFilter = new RedisUrlFilter();
+            
         }        
 
         //Add ResponseHandler method of the Spider to registedCallback Dic as Default Callback
         private void AddDefaultHandlerToCallbackList()
         {
-            if(!string.IsNullOrEmpty(defaultCallbackName))
+            if(callBacksRegistered)
             {
                 return;
             }
@@ -48,7 +43,14 @@ namespace NScrapy.Scheduler.RedisExt
             defaultCallbackName = defaultCallback.GetMethodInfo().Name;
             //defaultCallbackName = NScrapyHelper.GetMD5FromString(methodName);
             registedCallback.Add(defaultCallbackName, defaultCallback);
-            callBackExcutedList.Add(defaultCallbackName, false);
+            var methods = currentSpider.GetType().GetMethods(BindingFlags.Instance|BindingFlags.Static|BindingFlags.Public|BindingFlags.NonPublic);
+            var availableMethods = methods.Where(method => method.Name!=defaultCallbackName&& method.GetParameters().Count() == 1&& method.GetParameters().FirstOrDefault().ParameterType == typeof(IResponse));
+            foreach(var availableMethod in availableMethods)
+            {
+                var callBack = new Action<IResponse>(response => availableMethod.Invoke(currentSpider, new object[] { response as object }));            
+                registedCallback.Add(availableMethod.Name, callBack);
+            }
+            callBacksRegistered = true;
         }
 
         public void SendRequestToReceiver(IRequest request)
@@ -61,17 +63,15 @@ namespace NScrapy.Scheduler.RedisExt
                      var callbackName = this.defaultCallbackName;
                      if (request.Callback != null)
                      {
+                         //request.Callback.GetMethodInfo().
                          callbackName = request.Callback.GetMethodInfo().Name;
                          if (!registedCallback.ContainsKey(callbackName))
                          {
                              registedCallback.Add(callbackName, request.Callback);
-                             callBackExcutedList.Add(callbackName, false);
                          }
                      }
                     //Url Visted and coresponding call back already Executed before
-                     if (u.Result &&
-                        callBackExcutedList.ContainsKey(callbackName) &&
-                        callBackExcutedList[callbackName] == true)
+                     if (u.Result)
                      {
                          return;
                      }
@@ -129,7 +129,7 @@ namespace NScrapy.Scheduler.RedisExt
                     var callback = registedCallback[responseMessage.CallbacksFingerprint];
                     var response = NScrapyHelper.DecompressResponse(responseMessage.Payload);
                     var task = new Task(()=>callback(response));
-                    task.ContinueWith(t => callBackExcutedList[responseMessage.CallbacksFingerprint] = true);
+                    task.ContinueWith(t => NScrapyContext.CurrentContext.Log.Error($"Error Process Callback {responseMessage.CallbacksFingerprint}",task.Exception ),TaskContinuationOptions.OnlyOnFaulted);
                     task.Start();
                 }                
             }

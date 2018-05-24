@@ -66,6 +66,7 @@ namespace NScrapy.Project
                 if (!page.Contains("javascript"))
                 {
                     NScrapy.Shell.NScrapy.GetInstance().Follow(returnValue, page, VisitPage);
+                    //A test for recall aganist an anonymous method               
                 }
             }
         }
