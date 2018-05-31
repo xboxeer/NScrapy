@@ -100,7 +100,7 @@ namespace NScrapy.Scheduler.RedisExt
             var connection = RedisSchedulerContext.Current.Connection;
             while (true)
             {
-                var lockToken = new Guid();
+                var lockToken = Guid.NewGuid();
                 RedisResponseMessage responseMessage = null;
                 RedisValue value = new RedisValue();
                 try

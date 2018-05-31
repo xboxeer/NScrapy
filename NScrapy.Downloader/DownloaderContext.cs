@@ -36,6 +36,18 @@ namespace NScrapy.Downloader
             }
         }
 
+        public int DownloaderCapbility
+        {
+            get;private set;
+        }
+        
+        public int RunningDownloader
+        {
+            //There is no need to lock the set of RunningDownloader even there will be multiple Downloader increase/decrease this number
+            //beacuse it is not a critical value to the framework, only for the purpose of letting other knows how many Downloader is runing
+            get; internal set;
+        }
+
         public DownloaderRunningMode RunningMode
         {
             get
@@ -75,6 +87,8 @@ namespace NScrapy.Downloader
                     if(current==null)
                     {
                         current = new DownloaderContext();
+                        current.DownloaderCapbility= int.Parse(Context.CurrentConfig["AppSettings:DownloaderPoolCapbility"] ?? "4");
+                        current.RunningDownloader = 0;
                     }
                     return current;
                 }

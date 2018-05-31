@@ -4,11 +4,14 @@
       "SchedulerType": "NScrapy.Scheduler.RedisExt.RedisScheduler"
     },
     "Scheduler.RedisExt": {
-      "RedisServer": "192.168.0.105",
+      "RedisServer": "192.168.0.106",
       "RedisPort": "6379",
       "ReceiverQueue": "NScrapy.Downloader",
       "ResponseQueue": "NScrapy.ResponseQueue"
     },
+    "DownloaderMiddlewares": [
+      { "Middleware": "NScrapy.DownloaderShell.StatusUpdaterMiddleware" }
+    ],
     "DownloaderPoolCapbility": 4,
     "HttpHeader": {
       "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",

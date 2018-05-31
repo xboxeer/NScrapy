@@ -14,8 +14,10 @@ namespace NScrapy.DownloaderShell
 {
     public class Program
     {
+        public static Guid ID;
         public static void Main(string[] args)
         {
+            ID = Guid.NewGuid();
             var context = Downloader.DownloaderContext.Context;
             context.RunningMode = Downloader.DownloaderRunningMode.Distributed;
             context.Log.Info("Downloader Started");
@@ -23,7 +25,7 @@ namespace NScrapy.DownloaderShell
             var responseQueueName = DownloaderContext.Context.CurrentConfig["AppSettings:Scheduler.RedisExt:ResponseQueue"];
             while (true)
             {
-                var lockToken = new Guid().ToString();
+                var lockToken = Guid.NewGuid().ToString();
                 //Get Lock before we count the lengh of queue
                 //In case multiple Downloader runs into this part and found there are 1 item in queue
                 //Then one of the Downloader gets that item, results to other Downloader get nothing

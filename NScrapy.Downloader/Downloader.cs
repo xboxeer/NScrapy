@@ -117,6 +117,7 @@ namespace NScrapy.Downloader
                 {
                     this.httpClient.DefaultRequestHeaders.Add("Cookie", request.Cookies);
                 }
+                DownloaderContext.Context.RunningDownloader++;
                 if (request.FormData == null || request.FormData.Count==0)
                 {
                     responseMessage = await this.httpClient.GetAsync(request.URL);
@@ -130,6 +131,7 @@ namespace NScrapy.Downloader
             finally
             {
                 this.Status = DownloaderStatus.Idle;
+                DownloaderContext.Context.RunningDownloader--;
             }
             var response = new HttpResponse()
             {
@@ -138,6 +140,7 @@ namespace NScrapy.Downloader
                 ResponsePlanText = await responseMessage.Content.ReadAsStringAsync(),
                 URL = request.URL
             };
+            
             foreach (var middleware in this.Middlewares)
             {
                 middleware.PostDownload(response);

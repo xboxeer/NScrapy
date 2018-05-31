@@ -5,6 +5,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace NScrapy.Downloader.Middleware
 {
@@ -21,24 +22,24 @@ namespace NScrapy.Downloader.Middleware
             {
                 if (encoding.ToLower() == "gzip")
                 {
-                    decompressedBody = this.Decompressor(resultStream, ContentCompressType.GZip);
+                    decompressedBody =await this.Decompressor(resultStream, ContentCompressType.GZip);
                 }
                 else if (encoding.ToLower() == "deflate")
                 {
-                    decompressedBody = this.Decompressor(resultStream, ContentCompressType.Deflate);
+                    decompressedBody =await this.Decompressor(resultStream, ContentCompressType.Deflate);
                 }
                 else
                 {
-                    decompressedBody = response.RawResponseMessage.Content.ReadAsStringAsync().Result;
+                    decompressedBody = await response.RawResponseMessage.Content.ReadAsStringAsync();
                 }
             }
             else
             {
-                decompressedBody = response.RawResponseMessage.Content.ReadAsStringAsync().Result;
+                decompressedBody =await response.RawResponseMessage.Content.ReadAsStringAsync();
             }
             response.ResponsePlanText = decompressedBody;
         }
-        private string Decompressor(Stream inputStream, ContentCompressType compressType)
+        private async Task<string> Decompressor(Stream inputStream, ContentCompressType compressType)
         {
             using (MemoryStream decompressedSteam = new MemoryStream())
             {
@@ -55,9 +56,9 @@ namespace NScrapy.Downloader.Middleware
                 try
                 {
                     int len = 0;
-                    while ((len = decompressorStream.Read(buffer, 0, buffer.Length)) > 0)
+                    while ((len =await decompressorStream.ReadAsync(buffer, 0, buffer.Length)) > 0)
                     {
-                        decompressedSteam.Write(buffer, 0, len);
+                        await decompressedSteam.WriteAsync(buffer, 0, len);
                     }
                 }
                 finally
