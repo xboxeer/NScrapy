@@ -14,8 +14,9 @@ namespace NScrapy.Project
     {
         static void Main(string[] args)
         {
+            new ArgumentException();
             var shell = NScrapy.Shell.NScrapy.GetInstance();
-            shell.Crawl("JobSpider");
+            shell.Crawl("LianjiaSpider");
             while(true)
             {
 

@@ -44,8 +44,7 @@ namespace NScrapy.Infra
             using (var configStream = new MemoryStream(logConfig))
             {
                 XmlConfigurator.Configure(Log.Logger.Repository, configStream);
-            }
-            
+            }            
         }        
 
         public static NScrapyContext GetInstance()

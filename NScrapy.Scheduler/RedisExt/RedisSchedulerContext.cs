@@ -42,8 +42,9 @@ namespace NScrapy.Scheduler.RedisExt
             ResponseQueue = string.IsNullOrEmpty(NScrapyContext.CurrentContext.Configuration["AppSettings:Scheduler.RedisExt:ResponseQueue"]) ? "NScrapy.ResponseQueue" : NScrapyContext.CurrentContext.Configuration["AppSettings:Scheduler.RedisExt:ResponseQueue"];
             ConfigurationOptions options = new ConfigurationOptions()
             {
-                EndPoints = { $"{RedisServer}:{RedisPort}" }
-            };
+                EndPoints = { $"{RedisServer}:{RedisPort}" },    
+                SyncTimeout=10000*10//10 seconds till timeout
+            };            
             Connection = ConnectionMultiplexer.Connect(options);
         }
 
