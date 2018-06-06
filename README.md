@@ -1,6 +1,6 @@
 # NScrapy is a Distributed Spider Framework based on .net core and Redis. the idea of NScrapy comes from Scrapy, so you can write the spider in a very similar way to Scrapy 
 # NScrapy 是基于.net core 异步编程框架,Redis内存存储的一款开源分布式爬虫框架, NScrapy的整体思想源于知名的python爬虫框架Scrapy,整体上的写法也接近于Scrapy
-# NScrapy Sample code
+## NScrapy Sample code
 Below is a sample of NScrapy, the sample will visit Liepin, which is a Recruit web site
 Based on the seed URL defined in the [URL] attribute, NScrapy will visit each Postion information in detail page(the ParseItem method) , and visit the next page automatically(the VisitPage method)
 
@@ -41,7 +41,7 @@ Usage:
         public JobSpider()
         {
         }
-
+        //爬取种子链接
         public override void ResponseHandler(IResponse response)
         {
             var httpResponse = response as HttpResponse;
@@ -56,7 +56,7 @@ Usage:
             }
             VisitPage(returnValue);
         }
-
+        //翻页
         private void VisitPage(IResponse returnValue)
         {
             var hrefs = returnValue.CssSelector(".job-info h3 a::attr(href)").Extract();
@@ -74,7 +74,7 @@ Usage:
                 }
             }
         }
-
+        //在具体岗位的招聘页面上获取信息
         public void ParseItem(IResponse response)
         {
             //Add Field Mapping to the HTML Dom element
@@ -109,3 +109,74 @@ Usage:
         public string Time { get; set; }
     }
     }
+    
+ ## 分布式运行，Redis支持
+ ### 修改Project项目中appsetting.json,添加如下节点
+ 
+    "Scheduler": {
+      "SchedulerType": "NScrapy.Scheduler.RedisExt.RedisScheduler"
+    },
+    "Scheduler.RedisExt": {
+      "RedisServer": "192.168.0.106",//具体的redis地址
+      "RedisPort": "6379",//居然的redis端口
+      "ReceiverQueue": "NScrapy.Downloader",//Downloader监听的队列名称
+      "ResponseQueue": "NScrapy.ResponseQueue"//Spider监听的队列名称
+    }, 
+
+### 修改NScrapy.DownloaderShell.dll同层目录中的appsetting.json，内容同上面一样
+
+    "Scheduler": {
+      "SchedulerType": "NScrapy.Scheduler.RedisExt.RedisScheduler"
+    },
+    "Scheduler.RedisExt": {
+      "RedisServer": "192.168.0.106",//具体的redis地址
+      "RedisPort": "6379",//居然的redis端口
+      "ReceiverQueue": "NScrapy.Downloader",//Downloader监听的队列名称
+      "ResponseQueue": "NScrapy.ResponseQueue"//Spider监听的队列名称
+    }, 
+### 单独运行DownloaderShell
+
+    dotnet %DownloaderShellPath%/NScrapy.DownloaderShell.dll
+### 如果需要将Downloader本身状态更新到Redis，可以添加下面的中间件到DownloaderShell（目前正在开发的NScrapyWebConsole会从Redis中读取Downloader的状态数据）
+
+    "DownloaderMiddlewares": [
+      { "Middleware": "NScrapy.DownloaderShell.StatusUpdaterMiddleware" }
+    ],
+## 如果需要将抓取到的内容添加到MongoDB中 可以创建如下PipelineItem
+
+    public class MongoItemPipeline : IPipeline<JobItem>
+    {
+        private MongoClient client = new MongoClient("mongodb://localhost:27017");
+        public async  void ProcessItem(JobItem item, ISpider spider)
+        {
+            var db = client.GetDatabase("Lianjia");
+            var collection = db.GetCollection<JobItem>("JobItem");
+            await collection.InsertOneAsync(item);
+        }
+    }
+  然后将该Pipeline添加到project 的 appsetting.json中  
+    
+    "Pipelines": [
+      { "Pipeline": "NScrapy.Project.MongoItemPipeline" }
+    ],
+ ## 相应的如果想要存储到CSV文件中 也可以添加CSV pipeline
+ 
+     public class CSVItemPipeline : IPipeline<JobItem>
+    {
+        private string startTime = DateTime.Now.ToString("yyyyMMddhhmm");
+        
+        public void ProcessItem(JobItem item, ISpider spider)
+        {
+            var info = $"{item.Title},{item.Firm},{item.SalaryFrom},{item.SalaryTo},{item.Location},{item.Time},{item.URL},{System.Environment.NewLine}";
+            Console.WriteLine(info);
+            File.AppendAllText($"output-{startTime}.csv", info,Encoding.UTF8);    
+        }
+    }
+    
+  并添加该pipeline item到appsetting.json中
+  
+    "Pipelines": [
+      { "Pipeline": "NScrapy.Project.MongoItemPipeline" },
+      { "Pipeline": "NScrapy.Project.CSVItemPipeline" }
+    ],
+  
