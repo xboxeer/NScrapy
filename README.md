@@ -110,9 +110,9 @@ Usage:
     }
     }
     
- ## 分布式运行，Redis支持
+## 分布式运行，Redis支持
  
- ### 修改Project项目中appsetting.json,添加如下节点
+### 修改Project项目中appsetting.json,添加如下节点
  
     "Scheduler": {
       "SchedulerType": "NScrapy.Scheduler.RedisExt.RedisScheduler"
@@ -163,7 +163,7 @@ Usage:
       { "Pipeline": "NScrapy.Project.MongoItemPipeline" }
     ],
     
- ## 相应的如果想要存储到CSV文件中 也可以添加CSV pipeline
+## 相应的如果想要存储到CSV文件中 也可以添加CSV pipeline
  
      public class CSVItemPipeline : IPipeline<JobItem>
     {
