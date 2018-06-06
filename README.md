@@ -111,6 +111,7 @@ Usage:
     }
     
  ## 分布式运行，Redis支持
+ 
  ### 修改Project项目中appsetting.json,添加如下节点
  
     "Scheduler": {
@@ -137,11 +138,13 @@ Usage:
 ### 单独运行DownloaderShell
 
     dotnet %DownloaderShellPath%/NScrapy.DownloaderShell.dll
+
 ### 如果需要将Downloader本身状态更新到Redis，可以添加下面的中间件到DownloaderShell（目前正在开发的NScrapyWebConsole会从Redis中读取Downloader的状态数据）
 
     "DownloaderMiddlewares": [
       { "Middleware": "NScrapy.DownloaderShell.StatusUpdaterMiddleware" }
     ],
+   
 ## 如果需要将抓取到的内容添加到MongoDB中 可以创建如下PipelineItem
 
     public class MongoItemPipeline : IPipeline<JobItem>
@@ -159,6 +162,7 @@ Usage:
     "Pipelines": [
       { "Pipeline": "NScrapy.Project.MongoItemPipeline" }
     ],
+    
  ## 相应的如果想要存储到CSV文件中 也可以添加CSV pipeline
  
      public class CSVItemPipeline : IPipeline<JobItem>
