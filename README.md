@@ -118,7 +118,7 @@ Usage:
     },
     "Scheduler.RedisExt": {
       "RedisServer": "192.168.0.106",//具体的redis地址
-      "RedisPort": "6379",//居然的redis端口
+      "RedisPort": "6379",//具体的redis端口
       "ReceiverQueue": "NScrapy.Downloader",//Downloader监听的队列名称
       "ResponseQueue": "NScrapy.ResponseQueue"//Spider监听的队列名称
     }, 
