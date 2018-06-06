@@ -109,11 +109,11 @@ Usage:
         public string Time { get; set; }
     }
     }
-    
+
 ## 分布式运行，Redis支持
- 
+
 ### 修改Project项目中appsetting.json,添加如下节点
- 
+
     "Scheduler": {
       "SchedulerType": "NScrapy.Scheduler.RedisExt.RedisScheduler"
     },
@@ -135,6 +135,7 @@ Usage:
       "ReceiverQueue": "NScrapy.Downloader",//Downloader监听的队列名称
       "ResponseQueue": "NScrapy.ResponseQueue"//Spider监听的队列名称
     }, 
+
 ### 单独运行DownloaderShell
 
     dotnet %DownloaderShellPath%/NScrapy.DownloaderShell.dll
