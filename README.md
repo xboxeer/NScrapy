@@ -140,7 +140,7 @@ Usage:
 
     dotnet %DownloaderShellPath%/NScrapy.DownloaderShell.dll
 
-### 如果需要将Downloader本身状态更新到Redis，可以添加下面的中间件到DownloaderShell（目前正在开发的NScrapyWebConsole会从Redis中读取Downloader的状态数据）
+### 如果需要将Downloader本身状态更新到Redis，可以添加下面的中间件到DownloaderShell（目前正在开发的[NScrapyWebConsole](https://github.com/xboxeer/NScrapyWebConsole)会从Redis中读取Downloader的状态数据）
 
     "DownloaderMiddlewares": [
       { "Middleware": "NScrapy.DownloaderShell.StatusUpdaterMiddleware" }
