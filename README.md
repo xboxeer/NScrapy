@@ -2,7 +2,8 @@
 # NScrapy 是基于.net core 异步编程框架,Redis内存存储的一款开源分布式爬虫框架, NScrapy的整体思想源于知名的python爬虫框架Scrapy,整体上的写法也接近于Scrapy
 ## NScrapy Sample code
 Below is a sample of NScrapy, the sample will visit Liepin, which is a Recruit web site
-Based on the seed URL defined in the [URL] attribute, NScrapy will visit each Postion information in detail page(the ParseItem method) , and visit the next page automatically(the VisitPage method)
+Based on the seed URL defined in the [URL] attribute, NScrapy will visit each Postion information in detail page(the ParseItem method) , and visit the next page automatically(the VisitPage method). It is not necessary for the Spider writer to know how the Spiders distributed in different machine/process communicate with each other, and how the Downloader process get the urt that need to download, just tell NScrapy the seed URL, inhirt Spider.Spdier class and write some call back, NScrapy will take the rest of the work
+NScrapy support different kind of extension, including add your own DownloaderMiddleware, config HTTP header, user agent pool.
 
 如下是一段简单的NScrapy爬虫，该爬虫会抓取猎聘网上所有php的职位信息并做相应的输出
 基于定义在[URL] attribute 中的种子URL，NScrapy会访问每一个职位信息的详细信息页面(ParseItem method)， 并且自动爬取下一页信息(VisitPage method)
@@ -111,8 +112,9 @@ Usage:
     }
 
 ## 分布式运行，Redis支持
-
+## Distributed NScrapy, supported by Redis
 ### 修改Project项目中appsetting.json,添加如下节点
+### Modify the appsetting.json in your NScrapy Project as below
 
     "Scheduler": {
       "SchedulerType": "NScrapy.Scheduler.RedisExt.RedisScheduler"
@@ -125,29 +127,32 @@ Usage:
     }, 
 
 ### 修改NScrapy.DownloaderShell.dll同层目录中的appsetting.json，内容同上面一样
+### Modify appsetting.json under NScrapy.DownloaderShell.dll directory
 
     "Scheduler": {
       "SchedulerType": "NScrapy.Scheduler.RedisExt.RedisScheduler"
     },
     "Scheduler.RedisExt": {
-      "RedisServer": "192.168.0.106",//具体的redis地址
-      "RedisPort": "6379",//居然的redis端口
-      "ReceiverQueue": "NScrapy.Downloader",//Downloader监听的队列名称
-      "ResponseQueue": "NScrapy.ResponseQueue"//Spider监听的队列名称
+      "RedisServer": "192.168.0.106",//具体的redis地址 Redis Server
+      "RedisPort": "6379",//具体的redis端口 Redis Server Port
+      "ReceiverQueue": "NScrapy.Downloader",//Downloader监听的队列名称 Queue for Downloader
+      "ResponseQueue": "NScrapy.ResponseQueue"//Spider监听的队列名称 Queue for Spider
     }, 
 
 ### 单独运行DownloaderShell
+### Run the DownloaderShell individually
 
     dotnet %DownloaderShellPath%/NScrapy.DownloaderShell.dll
 
 ### 如果需要将Downloader本身状态更新到Redis，可以添加下面的中间件到DownloaderShell（目前正在开发的[NScrapyWebConsole](https://github.com/xboxeer/NScrapyWebConsole)会从Redis中读取Downloader的状态数据）
+### If you want to update the status of individual Downloader status to Redis, add the below DownloaderShell middleware to appsetting.json(The in develop project [NScrapyWebConsole](https://github.com/xboxeer/NScrapyWebConsole) will read Downloader Status from Redis)
 
     "DownloaderMiddlewares": [
       { "Middleware": "NScrapy.DownloaderShell.StatusUpdaterMiddleware" }
     ],
    
 ## 如果需要将抓取到的内容添加到MongoDB中 可以创建如下PipelineItem
-
+## If you want to add the data that you captured to a MongoDB, you can add below PipelineItem
     public class MongoItemPipeline : IPipeline<JobItem>
     {
         private MongoClient client = new MongoClient("mongodb://localhost:27017");
@@ -158,13 +163,14 @@ Usage:
             await collection.InsertOneAsync(item);
         }
     }
-  然后将该Pipeline添加到project 的 appsetting.json中  
-    
+## 然后将该Pipeline添加到project 的 appsetting.json中  
+## Add the Pipeline to your project's appsetting.json    
     "Pipelines": [
       { "Pipeline": "NScrapy.Project.MongoItemPipeline" }
     ],
     
 ## 相应的如果想要存储到CSV文件中 也可以添加CSV pipeline
+## You can also save your data in CSV by adding CSV pipeline as below
  
      public class CSVItemPipeline : IPipeline<JobItem>
     {
@@ -178,7 +184,8 @@ Usage:
         }
     }
     
-  并添加该pipeline item到appsetting.json中
+## 并添加该pipeline item到appsetting.json中
+## Add the pipeline item in appsetting.json 
   
     "Pipelines": [
       { "Pipeline": "NScrapy.Project.MongoItemPipeline" },
