@@ -1,5 +1,5 @@
 # NScrapy
-![buildpass](https://img.shields.io/badge/build-passed-blue.svg) ![license](https://img.shields.io/badge/License-Apache2.0-yellowgreen.svg) ![netversion](https://img.shields.io/badge/.netcore-2.0-lightgrey.svg)
+![buildpass](https://img.shields.io/badge/build-pass-blue.svg) ![license](https://img.shields.io/badge/License-Apache2.0-yellowgreen.svg) ![netversion](https://img.shields.io/badge/.netcore-2.0-lightgrey.svg)
 ## NScrapy is a Distributed Spider Framework based on .net core and Redis. the idea of NScrapy comes from Scrapy, so you can write the spider in a very similar way to Scrapy 
 ## NScrapy 是基于.net core 异步编程框架,Redis内存存储的一款开源分布式爬虫框架, NScrapy的整体思想源于知名的python爬虫框架Scrapy,整体上的写法也接近于Scrapy
 ## NScrapy Sample code
