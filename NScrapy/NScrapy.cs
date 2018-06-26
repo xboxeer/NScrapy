@@ -70,7 +70,7 @@ namespace NScrapy.Shell
 
         private static Type GetSchedulerType()
         {
-            var schedulerName = NScrapyContext.GetInstance().Configuration["AppSettings:Scheduler:SchedulerType"];
+            var schedulerName = NScrapyContext.GetInstance().CurrentConfig["AppSettings:Scheduler:SchedulerType"];
             Type schedulerType = null;
             if(string.IsNullOrEmpty(schedulerName))
             {
@@ -80,7 +80,7 @@ namespace NScrapy.Shell
             {
 
                 Assembly schedulerAssembly = null;
-                var assemblyName = NScrapyContext.GetInstance().Configuration["AppSettings:Scheduler:SchedulerTypeAssembly"];
+                var assemblyName = NScrapyContext.GetInstance().CurrentConfig["AppSettings:Scheduler:SchedulerTypeAssembly"];
                 if(string.IsNullOrEmpty(assemblyName))
                 {
                     schedulerAssembly = Assembly.LoadFrom(Path.Combine(Directory.GetCurrentDirectory(), "NScrapy.Scheduler.dll"));
@@ -100,7 +100,7 @@ namespace NScrapy.Shell
 
         private static Type GetEngineType()
         {
-            var engineName = NScrapyContext.GetInstance().Configuration["AppSettings:SpiderEngine:SpiderEngineName"];
+            var engineName = NScrapyContext.GetInstance().CurrentConfig["AppSettings:SpiderEngine:SpiderEngineName"];
             Type engineType = null;
             if (string.IsNullOrEmpty(engineName))
             {
@@ -109,7 +109,7 @@ namespace NScrapy.Shell
             else
             {
                 Assembly engineAssembly = null;
-                var engineAssemblyName = NScrapyContext.GetInstance().Configuration["AppSettings:SpiderEngine:SpiderEngineAssembly"];
+                var engineAssemblyName = NScrapyContext.GetInstance().CurrentConfig["AppSettings:SpiderEngine:SpiderEngineAssembly"];
                 if (engineAssemblyName != null)
                 {
                     engineAssembly = Assembly.LoadFrom(engineAssemblyName);

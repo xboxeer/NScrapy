@@ -20,8 +20,8 @@ namespace NScrapy.DownloaderShell
         {
             await RedisManager.Connection.GetDatabase().StringSetAsync(
                 $"NScrapy.DownloaderStatus.{Program.ID.ToString()}", string.Format("{{DownloaderCapbility:{0},RunningDownloaders:{1},RunningTime:{2},StartTime:{3},MemoryUsed:{4}MB, LastUpdate:{5}}}", 
-                DownloaderContext.Context.DownloaderCapbility, 
-                DownloaderContext.Context.RunningDownloader,
+                DownloaderContext.CurrentContext.DownloaderCapbility, 
+                DownloaderContext.CurrentContext.RunningDownloader,
                 currentProcess.UserProcessorTime,
                 currentProcess.StartTime,
                 currentProcess.PrivateMemorySize64/megaBytes,

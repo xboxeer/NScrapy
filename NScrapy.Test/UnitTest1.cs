@@ -166,6 +166,23 @@ namespace NScrapy.Test
             Assert.IsTrue(logContent.Contains("MockValue2 Mapped!"));
         }
 
+        [TestMethod]
+        public void DownloaderContextConfigProviderTest()
+        {
+            var context = Downloader.DownloaderContext.CurrentContext;
+            context.ConfigProvider = new MockConfigProvider();
+            context.RunningMode = Downloader.DownloaderRunningMode.Distributed;
+            Assert.AreEqual("192.168.0.103:2181", context.CurrentConfig["AppSettings:ZookeeperEndpoint"]);
+        }
+
+        [TestMethod]
+        public void NScrapyContextConfigProviderTest()
+        {           
+            var context = NScrapyContext.GetInstance();
+            context.ConfigProvider = new MockConfigProvider();
+            Assert.AreEqual("192.168.0.103:2181", context.CurrentConfig["AppSettings:ZookeeperEndpoint"]);
+        }
+
         private string GetLogContent(string logPath)
         {
             var copiedLogFile = Path.Combine(Directory.GetCurrentDirectory(), "log-file.test.txt");

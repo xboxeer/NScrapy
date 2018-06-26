@@ -35,7 +35,7 @@ namespace NScrapy.Downloader
     
         static Downloader()
         {
-            var capbility = DownloaderContext.Context.CurrentConfig["AppSettings:DownloaderPoolCapbility"];
+            var capbility = DownloaderContext.CurrentContext.CurrentConfig["AppSettings:DownloaderPoolCapbility"];
             //Init a simple Downloader pool, right now does not support dynamicly increase pool size, 
             //default to 4 Downloader if DownloaderPoolCapbility is not setting
             if (string.IsNullOrEmpty(capbility))
@@ -70,7 +70,7 @@ namespace NScrapy.Downloader
             }
             httpClient = new HttpClient();
             
-            var middlewareNames = DownloaderContext.Context.CurrentConfig.GetSection("AppSettings:DownloaderMiddlewares").GetChildren();
+            var middlewareNames = DownloaderContext.CurrentContext.CurrentConfig.GetSection("AppSettings:DownloaderMiddlewares").GetChildren();
             Middlewares = new List<IDownloaderMiddleware>
             {
                 new HttpHeaderMiddleware(),
@@ -80,7 +80,7 @@ namespace NScrapy.Downloader
             foreach (var middlewareNamePath in middlewareNames)
             {
                 var path =$"{middlewareNamePath.Path}:Middleware";
-                var middlewareName = DownloaderContext.Context.CurrentConfig[path];
+                var middlewareName = DownloaderContext.CurrentContext.CurrentConfig[path];
                 if(string.IsNullOrEmpty(middlewareName))
                 {
                     continue;
@@ -117,7 +117,7 @@ namespace NScrapy.Downloader
                 {
                     this.httpClient.DefaultRequestHeaders.Add("Cookie", request.Cookies);
                 }
-                DownloaderContext.Context.RunningDownloader++;
+                DownloaderContext.CurrentContext.RunningDownloader++;
                 if (request.FormData == null || request.FormData.Count==0)
                 {
                     responseMessage = await this.httpClient.GetAsync(request.URL);
@@ -131,7 +131,7 @@ namespace NScrapy.Downloader
             finally
             {
                 this.Status = DownloaderStatus.Idle;
-                DownloaderContext.Context.RunningDownloader--;
+                DownloaderContext.CurrentContext.RunningDownloader--;
             }
             var response = new HttpResponse()
             {

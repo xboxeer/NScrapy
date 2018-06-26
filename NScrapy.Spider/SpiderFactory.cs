@@ -17,7 +17,7 @@ namespace NScrapy.Spider
         static string SpiderProjectName = string.Empty;
         static SpiderFactory()
         {            
-            SpiderProjectName = NScrapyContext.CurrentContext.Configuration["AppSettings:SpiderProject"];
+            SpiderProjectName = NScrapyContext.CurrentContext.CurrentConfig["AppSettings:SpiderProject"];
             spiderProjectAssembly = currentApp.GetAssemblies().Where(assembly => assembly.GetName().Name == SpiderProjectName).FirstOrDefault();            
         }
 

@@ -11,11 +11,11 @@ namespace NScrapy.Downloader.Middleware
         static List<string> userAgentPool = new List<string>();
         static HttpUserAgentPoolMiddleware()
         {
-            var section = DownloaderContext.Context.CurrentConfig.GetSection("AppSettings:UserAgentPool");
+            var section = DownloaderContext.CurrentContext.CurrentConfig.GetSection("AppSettings:UserAgentPool");
             foreach(var item in section.GetChildren())
             {
                 var path = $"{item.Path}:User-Agent";
-                var agent = DownloaderContext.Context.CurrentConfig[path];
+                var agent = DownloaderContext.CurrentContext.CurrentConfig[path];
                 userAgentPool.Add(agent);
             }
         }

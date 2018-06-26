@@ -36,10 +36,10 @@ namespace NScrapy.Scheduler.RedisExt
 
         private RedisSchedulerContext()
         {
-            RedisServer = NScrapyContext.CurrentContext.Configuration["AppSettings:Scheduler.RedisExt:RedisServer"];
-            RedisPort = NScrapyContext.CurrentContext.Configuration["AppSettings:Scheduler.RedisExt:RedisPort"];
-            ReceiverQueue = string.IsNullOrEmpty(NScrapyContext.CurrentContext.Configuration["AppSettings:Scheduler.RedisExt:ReceiverQueue"]) ? "NScrapy.Downloader" : NScrapyContext.CurrentContext.Configuration["AppSettings:Scheduler.RedisExt:ReceiverQueue"];
-            ResponseQueue = string.IsNullOrEmpty(NScrapyContext.CurrentContext.Configuration["AppSettings:Scheduler.RedisExt:ResponseQueue"]) ? "NScrapy.ResponseQueue" : NScrapyContext.CurrentContext.Configuration["AppSettings:Scheduler.RedisExt:ResponseQueue"];
+            RedisServer = NScrapyContext.CurrentContext.CurrentConfig["AppSettings:Scheduler.RedisExt:RedisServer"];
+            RedisPort = NScrapyContext.CurrentContext.CurrentConfig["AppSettings:Scheduler.RedisExt:RedisPort"];
+            ReceiverQueue = string.IsNullOrEmpty(NScrapyContext.CurrentContext.CurrentConfig["AppSettings:Scheduler.RedisExt:ReceiverQueue"]) ? "NScrapy.Downloader" : NScrapyContext.CurrentContext.CurrentConfig["AppSettings:Scheduler.RedisExt:ReceiverQueue"];
+            ResponseQueue = string.IsNullOrEmpty(NScrapyContext.CurrentContext.CurrentConfig["AppSettings:Scheduler.RedisExt:ResponseQueue"]) ? "NScrapy.ResponseQueue" : NScrapyContext.CurrentContext.CurrentConfig["AppSettings:Scheduler.RedisExt:ResponseQueue"];
             ConfigurationOptions options = new ConfigurationOptions()
             {
                 EndPoints = { $"{RedisServer}:{RedisPort}" },    

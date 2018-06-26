@@ -26,7 +26,9 @@ namespace NScrapy.Downloader
             {
                 return config;
             }
-        }       
+        }   
+        
+        
         
         public ILog Log
         {
@@ -59,15 +61,21 @@ namespace NScrapy.Downloader
                 runningMode = value;
                 if (value == DownloaderRunningMode.InMemory && NScrapyContext.CurrentContext != null)
                 {
-                    this.config = NScrapyContext.CurrentContext.Configuration;
+                    this.config = NScrapyContext.CurrentContext.CurrentConfig;
                     this.log = NScrapyContext.CurrentContext.Log;
                 }
                 else
                 {
-
                     var builder = new ConfigurationBuilder();
-                    builder.SetBasePath(Directory.GetCurrentDirectory()).AddJsonFile("appsetting.json");
-                    config = builder.Build();
+                    if (this.ConfigProvider==null)
+                    {                        
+                        builder.SetBasePath(Directory.GetCurrentDirectory()).AddJsonFile("appsetting.json");                        
+                    }
+                    else
+                    {
+                        builder.AddJsonFile(this.ConfigProvider.GetConfigFilePath());
+                    }
+                    this.config = builder.Build();
                     log = log4net.LogManager.GetLogger(this.GetType());
                     using (FileStream fs = File.OpenRead(Path.Combine(Directory.GetCurrentDirectory(), "log4net.config")))
                     {
@@ -78,7 +86,9 @@ namespace NScrapy.Downloader
             }
         }
 
-        public static DownloaderContext Context
+        public IConfigProvider ConfigProvider { get; set; }
+
+        public static DownloaderContext CurrentContext
         {
             get
             {
@@ -87,7 +97,7 @@ namespace NScrapy.Downloader
                     if(current==null)
                     {
                         current = new DownloaderContext();
-                        current.DownloaderCapbility= int.Parse(Context.CurrentConfig["AppSettings:DownloaderPoolCapbility"] ?? "4");
+                        current.DownloaderCapbility= int.Parse(CurrentContext.CurrentConfig["AppSettings:DownloaderPoolCapbility"] ?? "4");
                         current.RunningDownloader = 0;
                     }
                     return current;

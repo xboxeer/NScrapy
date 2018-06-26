@@ -1,5 +1,6 @@
 ﻿{
   "AppSettings": {
+    "ConfigProvider": "Zookeeper",
     "Scheduler": {
       "SchedulerType": "NScrapy.Scheduler.RedisExt.RedisScheduler"
     },
