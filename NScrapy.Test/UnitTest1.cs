@@ -2,6 +2,7 @@ using HtmlAgilityPack;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NScrapy.Infra;
 using NScrapy.Infra.Attributes.SpiderAttributes;
+using NScrapy.Infra.ConfigProvider;
 using NScrapy.Infra.Pipeline;
 using NScrapy.Shell;
 using System;
@@ -181,6 +182,16 @@ namespace NScrapy.Test
             var context = NScrapyContext.GetInstance();
             context.ConfigProvider = new MockConfigProvider();
             Assert.AreEqual("192.168.0.103:2181", context.CurrentConfig["AppSettings:ZookeeperEndpoint"]);
+        }
+
+        [TestMethod]
+        public void ZookeeperConfigProviderTest()
+        {
+            var config = new ZookeeperConfigProvider();
+            ZkHelper.Create("/nscrapy/conf", Encoding.UTF8.GetBytes($"appsetting.{Guid.NewGuid().ToString()}.json"));
+            ZkHelper.Get("/nscrapy/conf");
+            ZkHelper.Set("/nscrapy/conf", $"appsetting.{Guid.NewGuid().ToString()}.json");
+            Thread.Sleep(10000);
         }
 
         private string GetLogContent(string logPath)

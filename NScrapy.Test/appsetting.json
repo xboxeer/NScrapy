@@ -18,6 +18,7 @@
     //    "RemovedMiddleware": "test3"
     //  }
     //],
+    "ZookeeperEndpoint": "192.168.0.103:2181",
     "Pipelines": [
       { "Pipeline": "NScrapy.Infra.Pipeline.MockPipeline" }
     ],
