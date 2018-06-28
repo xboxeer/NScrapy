@@ -1,5 +1,7 @@
-# NScrapy is a Distributed Spider Framework based on .net core and Redis. the idea of NScrapy comes from Scrapy, so you can write the spider in a very similar way to Scrapy 
-# NScrapy 是基于.net core 异步编程框架,Redis内存存储的一款开源分布式爬虫框架, NScrapy的整体思想源于知名的python爬虫框架Scrapy,整体上的写法也接近于Scrapy
+# NScrapy
+![buildpass](https://img.shields.io/badge/build-pass-blue.svg) ![license](https://img.shields.io/badge/License-Apache2.0-yellowgreen.svg) ![netversion](https://img.shields.io/badge/.netcore-2.0-lightgrey.svg)
+## NScrapy is a Distributed Spider Framework based on .net core and Redis. the idea of NScrapy comes from Scrapy, so you can write the spider in a very similar way to Scrapy 
+## NScrapy 是基于.net core 异步编程框架,Redis内存存储的一款开源分布式爬虫框架, NScrapy的整体思想源于知名的python爬虫框架Scrapy,整体上的写法也接近于Scrapy
 ## NScrapy Sample code
 Below is a sample of NScrapy, the sample will visit Liepin, which is a Recruit web site
 Based on the seed URL defined in the [URL] attribute, NScrapy will visit each Postion information in detail page(the ParseItem method) , and visit the next page automatically(the VisitPage method). It is not necessary for the Spider writer to know how the Spiders distributed in different machine/process communicate with each other, and how the Downloader process get the urt that need to download, just tell NScrapy the seed URL, inhirt Spider.Spdier class and write some call back, NScrapy will take the rest of the work
