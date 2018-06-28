@@ -1,4 +1,5 @@
 using HtmlAgilityPack;
+using Microsoft.Extensions.Configuration;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NScrapy.Infra;
 using NScrapy.Infra.Attributes.SpiderAttributes;
@@ -12,6 +13,7 @@ using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace NScrapy.Test
 {
@@ -188,10 +190,35 @@ namespace NScrapy.Test
         public void ZookeeperConfigProviderTest()
         {
             var config = new ZookeeperConfigProvider();
-            ZkHelper.Create("/nscrapy/conf", Encoding.UTF8.GetBytes($"appsetting.{Guid.NewGuid().ToString()}.json"));
-            ZkHelper.Get("/nscrapy/conf");
-            ZkHelper.Set("/nscrapy/conf", $"appsetting.{Guid.NewGuid().ToString()}.json");
+            ZkHelper.Create("/nscrapy/conf", $"appsetting.{Guid.NewGuid().ToString()}.json");
+            ZkHelper.GetAsync("/nscrapy/conf");
+            ZkHelper.SetAsync("/nscrapy/conf", $"appsetting.{Guid.NewGuid().ToString()}.json");
+            ZkHelper.GetAsync("/nscrapy/conf");
+            ZkHelper.SetAsync("/nscrapy/conf", $"appsetting.{Guid.NewGuid().ToString()}.json");
             Thread.Sleep(10000);
+        }
+
+        [TestMethod]
+        public void ZKHelperCreateTest()
+        {
+            var data = Guid.NewGuid().ToString();
+            ZkHelper.Create("/nscrapy/conf/1/dev", data);
+            var returnedData = ZkHelper.GetAsync("/nscrapy/conf/1/dev").Result;
+            Assert.AreEqual(data, returnedData);
+        }
+
+        [TestMethod]
+        public void ZKHelperDeleteTest()
+        {
+            var data = Guid.NewGuid().ToString();
+            ZkHelper.Create("/nscrapy/conf/1/dev", data);
+            if(!ZkHelper.Exists("/nscrapy/conf/1/dev"))
+            {
+                Assert.Fail("path not created successfully");
+            }
+            ZkHelper.Delete("/nscrapy/conf/1/dev");
+            
+            Assert.IsFalse(ZkHelper.Exists("/nscrapy/conf/1/dev"));
         }
 
         private string GetLogContent(string logPath)

@@ -7,45 +7,30 @@ using org.apache.zookeeper;
 using org.apache.zookeeper.common;
 using System.Threading.Tasks;
 using static org.apache.zookeeper.ZooDefs;
+using System.Linq;
 
 namespace NScrapy.Infra.ConfigProvider
 {
     public class ZookeeperConfigProvider : IConfigProvider
     {
-        internal static ZooKeeper ZK;
-        private Watcher configWatcher;
-        public Watcher ConfigWatcher
-        {
-            get
-            {
-                return this.configWatcher;
-            }
-        }
         static ZookeeperConfigProvider()
         {
-            var builder = new ConfigurationBuilder();
-            builder.SetBasePath(Directory.GetCurrentDirectory()).AddJsonFile("appsetting.json");
-            var localConfig = builder.Build();
-            var zkEndpoint = localConfig["AppSettings:ZookeeperEndpoint"];
-            var watcher = new ZkConfigWatcher();
-            ZK = new ZooKeeper(zkEndpoint, 100000, watcher);
         }
 
         public string GetConfigFilePath()
         {
-            throw new NotImplementedException();
+            return ZkHelper.GetAsync("/nscrapy/conf").Result;
         }
     }
 
-    public class ZkConfigWatcher : Watcher
+    public class NScrapyConfigWatcher : Watcher
     {
 
         public override async Task process(WatchedEvent @event)
         {
             if (@event.getPath() == "/nscrapy/conf")
             {
-                var newValue = await ZookeeperConfigProvider.ZK.getDataAsync(@event.getPath(), true);
-                Console.WriteLine(UTF8Encoding.UTF8.GetString(newValue.Data));
+                var newValue = await ZkHelper.GetAsync(@event.getPath());                
             }
         }
     }
@@ -61,29 +46,83 @@ namespace NScrapy.Infra.ConfigProvider
             zkEndpoint = localConfig["AppSettings:ZookeeperEndpoint"];
         }
 
-        public static void Create(string path,byte[] data)
+        public static void Create(string path,string data)
         {
-            ZooKeeper.Using(zkEndpoint, 100000, new ZkConfigWatcher(), async zk =>
+            var bytes = data!=null? Encoding.UTF8.GetBytes(data):null;
+            var subPathes = path.Split("/",StringSplitOptions.RemoveEmptyEntries).ToList();
+            if (subPathes.Count > 1)
             {
-                await zk.createAsync(path,data,Ids.OPEN_ACL_UNSAFE,CreateMode.PERSISTENT);
-            });
+                Create(string.Join("/", subPathes.Take(subPathes.Count - 1)), string.Empty);
+            }
+            //Since each path node need to be created by their sequence in the path, we should not run the task in async way, 
+            //have to wait until the create is done for current path node 
+            ZooKeeper.Using(zkEndpoint, 100000, new NScrapyConfigWatcher(),async zk =>
+            {
+                if(path[0]!='/')
+                {
+                    path = "/" + path;
+                }
+                if (await zk.existsAsync(path)==null)
+                {
+                    await zk.createAsync(path, bytes, Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+                }
+            }).Wait();
         }
 
-        public static void Get(string path)
+        public async static Task<string> GetAsync(string path)
         {
-            ZooKeeper.Using(zkEndpoint, 100000, new ZkConfigWatcher(), async zk =>
+            DataResult result = null;
+            await ZooKeeper.Using(zkEndpoint, 1000, new NScrapyConfigWatcher(), async zk =>
             {
-                await zk.getDataAsync(path,true);
+                result = await zk.getDataAsync(path,true);
             });
+            return Encoding.UTF8.GetString(result.Data);
         }
 
-        public static void Set(string path, string value)
+        public async static void SetAsync(string path, string value)
         {
             
-            ZooKeeper.Using(zkEndpoint, 100000, new ZkConfigWatcher(), async zk =>
+            await ZooKeeper.Using(zkEndpoint, 1000, new NScrapyConfigWatcher(), async zk =>
             {
                 await zk.setDataAsync(path, Encoding.UTF8.GetBytes(value));
             });
         }
+
+        public static void Delete(string path)
+        {
+            ZooKeeper.Using(zkEndpoint, 1000, new NScrapyConfigWatcher(), async zk =>
+            {
+                await zk.deleteAsync(path);
+            });            
+        }
+
+        //public static void DeleteRecursive(string path)
+        //{
+        //    var children = ZooKeeper.Using(zkEndpoint, 100000, new NScrapyConfigWatcher(), async zk =>
+        //         {
+        //             zk.
+        //         });
+        //    var subPathes = path.Split("/", StringSplitOptions.RemoveEmptyEntries).ToList();
+        //    var temp=ZooKeeper.Using(zkEndpoint, 100000, new NScrapyConfigWatcher(),  zk =>
+        //       {
+        //           return zk.deleteAsync(path);
+        //       });
+        //    if(subPathes.Count>1)
+        //    {
+        //        var parentPath = "/" + string.Join("/", subPathes.Take(subPathes.Count - 1));
+        //        DeleteRecursive(parentPath);
+        //    }
+        //}
+
+        public static bool Exists(string path)
+        {
+            return ZooKeeper.Using(zkEndpoint, 1000, new NScrapyConfigWatcher(), async zk =>
+               {
+                   var stat = await zk.existsAsync(path, true);
+                   return stat != null;
+               }).Result;
+        }
+        
+
     }
 }
