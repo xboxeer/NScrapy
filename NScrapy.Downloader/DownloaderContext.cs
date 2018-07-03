@@ -81,7 +81,6 @@ namespace NScrapy.Downloader
                     {
                         XmlConfigurator.Configure(Log.Logger.Repository, fs);
                     }
-
                 }
             }
         }

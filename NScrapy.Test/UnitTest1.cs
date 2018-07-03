@@ -184,7 +184,7 @@ namespace NScrapy.Test
             var context = NScrapyContext.GetInstance();
             context.ConfigProvider = new MockConfigProvider();
             Assert.AreEqual("192.168.0.103:2181", context.CurrentConfig["AppSettings:ZookeeperEndpoint"]);
-        }
+        }        
 
         [TestMethod]
         public void ZookeeperConfigProviderTest()
@@ -205,6 +205,13 @@ namespace NScrapy.Test
             ZkHelper.Create("/nscrapy/conf/1/dev", data);
             var returnedData = ZkHelper.GetAsync("/nscrapy/conf/1/dev").Result;
             Assert.AreEqual(data, returnedData);
+        }
+
+        [TestMethod]
+        public void ZKHeperCreateConfigTest()
+        {
+            var data = File.ReadAllText("appsetting.json");
+            ZkHelper.Create("/nscrapy/conf", data);
         }
 
         [TestMethod]

@@ -18,8 +18,23 @@ namespace NScrapy.Infra.ConfigProvider
         }
 
         public string GetConfigFilePath()
-        {
-            return ZkHelper.GetAsync("/nscrapy/conf").Result;
+        {            
+            //Copy the config from zookeeper, and return the config name in local
+            var configContent = ZkHelper.GetAsync("/nscrapy/conf").Result;
+            string configFromZK = $"appsetting.zk.{DateTime.Now.ToString("yyyy-MM-dd HH.mm.ss.ms")}.json";
+            if(string.IsNullOrEmpty(configContent))
+            {
+                //Return default if no config found in ZK
+                return "appsetting.json";
+            }
+            using (var fs = File.OpenWrite(Path.Combine(Directory.GetCurrentDirectory(), configFromZK)))
+            {
+                var content = Encoding.UTF8.GetBytes(configContent);
+                fs.Write(content, 0, content.Length);                
+            }
+            //Use ZK Get to register the watcher again
+            ZkHelper.GetAsync("/nscrapy/conf");
+            return configFromZK;
         }
     }
 
@@ -95,24 +110,6 @@ namespace NScrapy.Infra.ConfigProvider
                 await zk.deleteAsync(path);
             });            
         }
-
-        //public static void DeleteRecursive(string path)
-        //{
-        //    var children = ZooKeeper.Using(zkEndpoint, 100000, new NScrapyConfigWatcher(), async zk =>
-        //         {
-        //             zk.
-        //         });
-        //    var subPathes = path.Split("/", StringSplitOptions.RemoveEmptyEntries).ToList();
-        //    var temp=ZooKeeper.Using(zkEndpoint, 100000, new NScrapyConfigWatcher(),  zk =>
-        //       {
-        //           return zk.deleteAsync(path);
-        //       });
-        //    if(subPathes.Count>1)
-        //    {
-        //        var parentPath = "/" + string.Join("/", subPathes.Take(subPathes.Count - 1));
-        //        DeleteRecursive(parentPath);
-        //    }
-        //}
 
         public static bool Exists(string path)
         {
