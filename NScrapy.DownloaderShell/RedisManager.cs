@@ -15,9 +15,9 @@ namespace NScrapy.DownloaderShell
 
         static RedisManager()
         {
-            var redisServer = DownloaderContext.Context.CurrentConfig["AppSettings:Scheduler.RedisExt:RedisServer"];
-            var redisPort = DownloaderContext.Context.CurrentConfig["AppSettings:Scheduler.RedisExt:RedisPort"];
-            ReceiverQueue = string.IsNullOrEmpty(DownloaderContext.Context.CurrentConfig["AppSettings:Scheduler.RedisExt:ReceiverQueue"]) ? "NScrapy.Downloader" : DownloaderContext.Context.CurrentConfig["AppSettings:Scheduler.RedisExt:ReceiverQueue"];
+            var redisServer = DownloaderContext.CurrentContext.CurrentConfig["AppSettings:Scheduler.RedisExt:RedisServer"];
+            var redisPort = DownloaderContext.CurrentContext.CurrentConfig["AppSettings:Scheduler.RedisExt:RedisPort"];
+            ReceiverQueue = string.IsNullOrEmpty(DownloaderContext.CurrentContext.CurrentConfig["AppSettings:Scheduler.RedisExt:ReceiverQueue"]) ? "NScrapy.Downloader" : DownloaderContext.CurrentContext.CurrentConfig["AppSettings:Scheduler.RedisExt:ReceiverQueue"];
             var options = new ConfigurationOptions()
             {
                 EndPoints = { $"{redisServer}:{redisPort}" },

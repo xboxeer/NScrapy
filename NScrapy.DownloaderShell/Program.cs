@@ -9,6 +9,7 @@ using System.IO;
 using System.Text;
 using System.Runtime.Serialization.Formatters.Binary;
 using NScrapy.Scheduler.RedisExt;
+using NScrapy.Infra.ConfigProvider;
 
 namespace NScrapy.DownloaderShell
 {
@@ -18,11 +19,12 @@ namespace NScrapy.DownloaderShell
         public static void Main(string[] args)
         {
             ID = Guid.NewGuid();
-            var context = Downloader.DownloaderContext.Context;
+            var context = Downloader.DownloaderContext.CurrentContext;
+            context.ConfigProvider = new ZookeeperConfigProvider();
             context.RunningMode = Downloader.DownloaderRunningMode.Distributed;
             context.Log.Info("Downloader Started");
-            var receiveQueueName = DownloaderContext.Context.CurrentConfig["AppSettings:Scheduler.RedisExt:ReceiverQueue"];
-            var responseQueueName = DownloaderContext.Context.CurrentConfig["AppSettings:Scheduler.RedisExt:ResponseQueue"];
+            var receiveQueueName = DownloaderContext.CurrentContext.CurrentConfig["AppSettings:Scheduler.RedisExt:ReceiverQueue"];
+            var responseQueueName = DownloaderContext.CurrentContext.CurrentConfig["AppSettings:Scheduler.RedisExt:ResponseQueue"];
             while (true)
             {
                 var lockToken = Guid.NewGuid().ToString();
@@ -41,7 +43,7 @@ namespace NScrapy.DownloaderShell
                     }
                     catch (Exception ex)
                     {
-                        DownloaderContext.Context.Log.Error($"Aquire lock failed!", ex);
+                        DownloaderContext.CurrentContext.Log.Error($"Aquire lock failed!", ex);
                     }
                     finally
                     {
@@ -71,7 +73,7 @@ namespace NScrapy.DownloaderShell
                 }
                 catch (Exception ex)
                 {
-                    DownloaderContext.Context.Log.Error($"Serialize response for {request.URL} failed!", ex);
+                    DownloaderContext.CurrentContext.Log.Error($"Serialize response for {request.URL} failed!", ex);
                 }
 
                 resultPayload = await NScrapyHelper.CompressString(resultPayload);
@@ -84,12 +86,12 @@ namespace NScrapy.DownloaderShell
 
                 //var publishResult = RedisManager.Connection.GetSubscriber().Publish(responseQueueName, $"{JsonConvert.SerializeObject(responseMessage)}");
                 var publishResult = RedisManager.Connection.GetDatabase().ListLeftPush(responseQueueName, $"{JsonConvert.SerializeObject(responseMessage)}");
-                DownloaderContext.Context.Log.Info($"Sending request to {request.URL} success!");
+                DownloaderContext.CurrentContext.Log.Info($"Sending request to {request.URL} success!");
 
             },
             TaskContinuationOptions.OnlyOnRanToCompletion);
             result.ContinueWith(u =>
-            DownloaderContext.Context.Log.Info($"Sending request to {request.URL} failed", result.Exception.InnerException),
+            DownloaderContext.CurrentContext.Log.Info($"Sending request to {request.URL} failed", result.Exception.InnerException),
             TaskContinuationOptions.OnlyOnFaulted);
         }
     }

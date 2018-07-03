@@ -22,6 +22,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="appsettingMockConfig.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="appsettingRedis.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

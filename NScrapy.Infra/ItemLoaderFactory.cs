@@ -69,11 +69,11 @@ namespace NScrapy.Infra
             var returnValue = new List<IPipeline<TItemType>>();
             var appAssembly = Assembly.GetEntryAssembly();
             var currentAssembly = Assembly.GetExecutingAssembly();
-            var pipelineNames = NScrapyContext.CurrentContext.Configuration.GetSection("AppSettings:Pipelines").GetChildren();
+            var pipelineNames = NScrapyContext.CurrentContext.CurrentConfig.GetSection("AppSettings:Pipelines").GetChildren();
             foreach (var pipelineNamePath in pipelineNames)
             {
                 var path = $"{pipelineNamePath.Path}:Pipeline";
-                var pipelineName = NScrapyContext.CurrentContext.Configuration[path];
+                var pipelineName = NScrapyContext.CurrentContext.CurrentConfig[path];
                 if (string.IsNullOrEmpty(pipelineName))
                 {
                     continue;

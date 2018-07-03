@@ -14,15 +14,29 @@ namespace NScrapy.Infra
     {
         public IEngine CurrentEngine { get; set; }
         public static NScrapyContext CurrentContext { get; private set; }
-        private static NScrapyContext _instance = null;
+        private static NScrapyContext _instance = null;        
 
         private int visitedUrl = 0;
+        private IConfigProvider configProvider = null;
 
-        public IConfiguration Configuration { get; private set; }
+        public IConfiguration CurrentConfig { get; private set; }
         public ISpider CurrentSpider { get; set; }
         public ILog Log { get; set; }
         public IUrlFilter UrlFilter { get; set; }
         public IScheduler CurrentScheduler { get; set; }
+
+        public IConfigProvider ConfigProvider { get
+            {
+                return this.configProvider;
+            }
+            set
+            {
+                this.configProvider = value;
+                var builder = new ConfigurationBuilder();
+                builder.AddJsonFile(value.GetConfigFilePath());
+                CurrentConfig = builder.Build();
+            }
+        }
 
         public event Action<object, EventArgs> ConfigRefreshed;
         
@@ -34,11 +48,13 @@ namespace NScrapy.Infra
                 }
             }
         }
+
         private NScrapyContext()
         {
             var builder = new ConfigurationBuilder();
-            builder.SetBasePath(Directory.GetCurrentDirectory()).AddJsonFile("appsetting.json");
-            Configuration = builder.Build();
+            builder.SetBasePath(Directory.GetCurrentDirectory()).AddJsonFile("appsetting.json");            
+            CurrentConfig = builder.Build();
+            
             Log = log4net.LogManager.GetLogger(this.GetType());
             var logConfig = File.ReadAllBytes(Path.Combine(Directory.GetCurrentDirectory(), "log4net.config")); //Properties.Resources.log4net;
             using (var configStream = new MemoryStream(logConfig))
@@ -66,7 +82,7 @@ namespace NScrapy.Infra
             }
             var builder = new ConfigurationBuilder();
             builder.SetBasePath(Directory.GetCurrentDirectory()).AddJsonFile(path);
-            Configuration = builder.Build();
+            CurrentConfig = builder.Build();
             if(ConfigRefreshed!=null)
             {
                 ConfigRefreshed(this, new EventArgs());
