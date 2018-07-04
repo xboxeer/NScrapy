@@ -172,8 +172,7 @@ namespace NScrapy.Test
         [TestMethod]
         public void DownloaderContextConfigProviderTest()
         {
-            var context = Downloader.DownloaderContext.CurrentContext;
-            context.ConfigProvider = new MockConfigProvider();
+            var context = Downloader.DownloaderContext.CurrentContext;            
             context.RunningMode = Downloader.DownloaderRunningMode.Distributed;
             Assert.AreEqual("192.168.0.103:2181", context.CurrentConfig["AppSettings:ZookeeperEndpoint"]);
         }
@@ -211,7 +210,7 @@ namespace NScrapy.Test
         public void ZKHeperCreateConfigTest()
         {
             var data = File.ReadAllText("appsetting.json");
-            ZkHelper.Create("/nscrapy/conf", data);
+            ZkHelper.SetAsync("/nscrapy/conf", data);
         }
 
         [TestMethod]

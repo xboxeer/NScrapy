@@ -45,7 +45,17 @@ namespace NScrapy.Infra.ConfigProvider
         {
             if (@event.getPath() == "/nscrapy/conf")
             {
-                var newValue = await ZkHelper.GetAsync(@event.getPath());                
+                var newConfig = await ZkHelper.GetAsync(@event.getPath());
+                string configFromZK = $"appsetting.zk.{DateTime.Now.ToString("yyyy-MM-dd HH.mm.ss.ms")}.json";
+                using (var fs = File.OpenWrite(Path.Combine(Directory.GetCurrentDirectory(), configFromZK)))
+                {
+                    var content = Encoding.UTF8.GetBytes(newConfig);
+                    fs.Write(content, 0, content.Length);
+                }
+                if (NScrapyContext.CurrentContext != null)
+                {
+                    NScrapyContext.CurrentContext.RefreshConfigFile(configFromZK);
+                }
             }
         }
     }
@@ -71,7 +81,7 @@ namespace NScrapy.Infra.ConfigProvider
             }
             //Since each path node need to be created by their sequence in the path, we should not run the task in async way, 
             //have to wait until the create is done for current path node 
-            ZooKeeper.Using(zkEndpoint, 100000, new NScrapyConfigWatcher(),async zk =>
+            ZooKeeper.Using(zkEndpoint, 1000, new NScrapyConfigWatcher(),async zk =>
             {
                 if(path[0]!='/')
                 {
