@@ -17,10 +17,6 @@ namespace NScrapy.Project
             new ArgumentException();
             var shell = NScrapy.Shell.NScrapy.GetInstance();
             shell.Crawl("LianjiaSpider");
-            while(true)
-            {
-
-            }
         }
     }
     [Name(Name = "JobSpider")]

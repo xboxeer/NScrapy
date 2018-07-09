@@ -9,11 +9,30 @@ namespace NScrapy.DownloaderShell
 {
     public static class RedisManager
     {
-        public static ConnectionMultiplexer Connection { get; private set; }
+        private static ConnectionMultiplexer connection;
+        private static bool connectionChangeRequested = false;
+        private static object lockObj = new object();
+        public static ConnectionMultiplexer Connection
+        {
+            get
+            {
+                if (connectionChangeRequested)
+                {
+                    Monitor.Wait(lockObj);
+                }
+                return connection;
+            }
+            private set { connection = value; }
+        }
 
         public static string ReceiverQueue { get; private set; }
 
         static RedisManager()
+        {
+            Connect();            
+        }
+
+        private static void Connect()
         {
             var redisServer = DownloaderContext.CurrentContext.CurrentConfig["AppSettings:Scheduler.RedisExt:RedisServer"];
             var redisPort = DownloaderContext.CurrentContext.CurrentConfig["AppSettings:Scheduler.RedisExt:RedisPort"];
@@ -22,7 +41,7 @@ namespace NScrapy.DownloaderShell
             {
                 EndPoints = { $"{redisServer}:{redisPort}" },
                 SyncTimeout = 60000,
-                ConnectTimeout=60000,
+                ConnectTimeout = 60000,
             };
             Connection = ConnectionMultiplexer.Connect(options);
         }

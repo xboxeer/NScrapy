@@ -19,6 +19,7 @@ namespace NScrapy.Shell
         private ServiceProvider _provider = null;
         private static NScrapy _instance = null;
         private Regex urlHostReg = new Regex(@"https?://[/s/S]*[^/]*/");
+        private object lockObj = new object();
         public NScrapyContext Context
         {
             get
@@ -134,27 +135,32 @@ namespace NScrapy.Shell
             var spider = Spider.SpiderFactory.GetSpider(spiderName);
             NScrapyContext.CurrentContext.CurrentSpider = spider;
             spider.StartRequests();
-            while (true)
+            Task.Run(() => AnymoreItemsInQueueAndDownloader());
+            lock(lockObj)
             {
-                Thread.Sleep(5000);
-                //Exit NScrapy if there is no pending Request/Reponse in queue and 
-                if (!this.AnymoreItemsInQueueAndDownloader())
-                {
-                    break;
-                }
+                Monitor.Wait(lockObj);
             }
         }
 
-        private bool AnymoreItemsInQueueAndDownloader()
+        private void AnymoreItemsInQueueAndDownloader()
         {
-            if (NScrapyContext.CurrentContext.CurrentScheduler.GetType() == typeof(Scheduler.InMemoryScheduler))
+            while (true)
             {
-                return !(Scheduler.RequestReceiver.RequestQueue.Count == 0 &&
-                                    Scheduler.ResponseDistributer.ResponseQueue.Count == 0 &&
-                                    Downloader.Downloader.RunningDownloader == 0);
+                if (NScrapyContext.CurrentContext.CurrentScheduler.GetType() == typeof(Scheduler.InMemoryScheduler))
+                {
+                    var noMoreItemInQueue = Scheduler.RequestReceiver.RequestQueue.Count == 0 &&
+                                        Scheduler.ResponseDistributer.ResponseQueue.Count == 0 &&
+                                        Downloader.Downloader.RunningDownloader == 0;
+                    if (noMoreItemInQueue)
+                    {
+                        Thread.Sleep(10000);
+                        lock (lockObj)
+                        {
+                            Monitor.Pulse(lockObj);
+                        }
+                    }
+                }
             }
-            //TODO: for distributed spider, need another way to stop the spider, right now we just leave it running all the time
-            return true;
         }
 
         public void Request(string url,Action<IResponse> responseHandler=null,string cookies=null, Dictionary<string,string> formData=null)

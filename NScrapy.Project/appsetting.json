@@ -1,9 +1,10 @@
 ﻿{
   "AppSettings": {
-    "ZookeeperEndpoint": "192.168.0.103:2181",
-    "Scheduler": {
-      "SchedulerType": "NScrapy.Scheduler.RedisExt.RedisScheduler"
-    },
+    //"ConfigProvider": "Zookeeper",
+    //"ZookeeperEndpoint": "192.168.0.103:2181",
+    //"Scheduler": {
+    //  "SchedulerType": "NScrapy.Scheduler.RedisExt.RedisScheduler"
+    //},
     "Scheduler.RedisExt": {
       "RedisServer": "192.168.0.106",
       "RedisPort": "6379",

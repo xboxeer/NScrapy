@@ -20,7 +20,6 @@ namespace NScrapy.DownloaderShell
         {
             ID = Guid.NewGuid();
             var context = Downloader.DownloaderContext.CurrentContext;
-            context.ConfigProvider = new ZookeeperConfigProvider();
             context.RunningMode = Downloader.DownloaderRunningMode.Distributed;
             context.Log.Info("Downloader Started");
             var receiveQueueName = DownloaderContext.CurrentContext.CurrentConfig["AppSettings:Scheduler.RedisExt:ReceiverQueue"];

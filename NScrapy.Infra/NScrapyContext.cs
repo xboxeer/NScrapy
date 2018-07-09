@@ -2,6 +2,7 @@
 using log4net.Config;
 using Microsoft.Extensions.Configuration;
 using NScrapy.Infra;
+using NScrapy.Infra.ConfigProvider;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -51,8 +52,9 @@ namespace NScrapy.Infra
 
         private NScrapyContext()
         {
+            var configPath = ConfigProviderFactory.GetProvider().GetConfigFilePath();
             var builder = new ConfigurationBuilder();
-            builder.SetBasePath(Directory.GetCurrentDirectory()).AddJsonFile("appsetting.json");            
+            builder.SetBasePath(Directory.GetCurrentDirectory()).AddJsonFile(configPath);            
             CurrentConfig = builder.Build();
             
             Log = log4net.LogManager.GetLogger(this.GetType());

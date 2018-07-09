@@ -6,6 +6,7 @@ using log4net;
 using log4net.Config;
 using Microsoft.Extensions.Configuration;
 using NScrapy.Infra;
+using NScrapy.Infra.ConfigProvider;
 
 namespace NScrapy.Downloader
 {
@@ -66,15 +67,9 @@ namespace NScrapy.Downloader
                 }
                 else
                 {
-                    var builder = new ConfigurationBuilder();
-                    if (this.ConfigProvider==null)
-                    {                        
-                        builder.SetBasePath(Directory.GetCurrentDirectory()).AddJsonFile("appsetting.json");                        
-                    }
-                    else
-                    {
-                        builder.AddJsonFile(this.ConfigProvider.GetConfigFilePath());
-                    }
+                    var configProvider = ConfigProviderFactory.GetProvider();                    
+                    var builder = new ConfigurationBuilder();       
+                    builder.SetBasePath(Directory.GetCurrentDirectory()).AddJsonFile(configProvider.GetConfigFilePath());                                            
                     this.config = builder.Build();
                     log = log4net.LogManager.GetLogger(this.GetType());
                     using (FileStream fs = File.OpenRead(Path.Combine(Directory.GetCurrentDirectory(), "log4net.config")))
@@ -83,9 +78,7 @@ namespace NScrapy.Downloader
                     }
                 }
             }
-        }
-
-        public IConfigProvider ConfigProvider { get; set; }
+        }        
 
         public static DownloaderContext CurrentContext
         {
