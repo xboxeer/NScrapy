@@ -151,9 +151,9 @@ namespace NScrapy.Shell
                     var noMoreItemInQueue = Scheduler.RequestReceiver.RequestQueue.Count == 0 &&
                                         Scheduler.ResponseDistributer.ResponseQueue.Count == 0 &&
                                         Downloader.Downloader.RunningDownloader == 0;
+                    Thread.Sleep(10000);
                     if (noMoreItemInQueue)
-                    {
-                        Thread.Sleep(10000);
+                    {                        
                         lock (lockObj)
                         {
                             Monitor.Pulse(lockObj);
