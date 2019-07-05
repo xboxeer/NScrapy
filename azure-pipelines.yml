@@ -1,0 +1,33 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+strategy:
+  matrix:
+    linux:
+      imageName: 'ubuntu-16.04'
+    mac:
+      imageName: 'macos-10.13'
+    windows:
+      imageName: 'vs2017-win2016'
+
+trigger:
+- azure-pipelines
+
+pool:
+  vmImage:  $(imageName)
+
+steps:
+- task: DotNetCoreInstaller@0
+  inputs:
+    version: '2.2.100'
+  displayName: 'Install dotnet Croe'
+- script: dotnet restore
+  displayName: 'dotnet restore'
+- task: DotNetCoreCLI@2
+  displayName: 'Build'
+  inputs:
+    command: build
+    projects: '**/*.csproj'
+    arguments: '--configuration Release'
+
