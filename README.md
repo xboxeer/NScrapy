@@ -9,7 +9,7 @@ NScrapy support different kind of extension, including add your own DownloaderMi
 
 如下是一段简单的NScrapy爬虫，该爬虫会抓取猎聘网上所有php的职位信息并做相应的输出
 基于定义在[URL] attribute 中的种子URL，NScrapy会访问每一个职位信息的详细信息页面(ParseItem method)， 并且自动爬取下一页信息(VisitPage method)
-爬虫作者不需要关心如何管理分布式爬虫之间如何互相通信，下载器如何获取待下载队列，下载器池是如何维护的，仅仅需要告诉NScrapy一个种子链接， 集成Spider.Spider类，并完成默认回调函数就可以爬去信息
+爬虫作者不需要关心如何管理分布式爬虫之间如何互相通信，下载器如何获取待下载队列，下载器池是如何维护的，仅仅需要告诉NScrapy一个种子链接， 继承Spider.Spider类，并完成默认回调函数就可以爬去信息
 NScrapy支持丰富的自定义扩展，包括在配置文件appsetting.json中加入DownloaderMiddware,配置Http请求头，构造User Agent pool等
 
 Usage:
