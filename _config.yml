@@ -1,1 +1,4 @@
 theme: jekyll-theme-cayman
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'build'
