@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
-using HtmlAgilityPack.CssSelectors.NetCore;
+using Fizzler.Systems.HtmlAgilityPack;
 using System.Text.RegularExpressions;
 using System.Runtime.Serialization;
 using System.Net.Http.Headers;
@@ -144,7 +144,7 @@ namespace NScrapy.Infra
                 selector = selector.Replace($"::attr({attr})","");
             }
             doc.LoadHtml(this.ResponsePlanText);
-            var elements=doc.QuerySelectorAll(selector);
+            var elements=doc.DocumentNode.QuerySelectorAll(selector).ToList();
             return this.CreateFilteredResponse(elements, filter);
         }
 

@@ -1,15 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.0</TargetFramework>
-
+    <TargetFramework>net10.0</TargetFramework>
     <IsPackable>false</IsPackable>
+    <DefineConstants>EXCLUDE_ZOOKEEPER</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.5.0" />
-    <PackageReference Include="MSTest.TestAdapter" Version="1.2.0" />
-    <PackageReference Include="MSTest.TestFramework" Version="1.2.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
+    <PackageReference Include="MSTest.TestAdapter" Version="3.2.0" />
+    <PackageReference Include="MSTest.TestFramework" Version="3.2.0" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,4 +1,5 @@
 ﻿using NScrapy.Downloader;
+using NScrapy.Downloader;
 using NScrapy.Infra;
 using System;
 using System.Threading.Tasks;
@@ -9,7 +10,6 @@ using System.IO;
 using System.Text;
 using System.Runtime.Serialization.Formatters.Binary;
 using NScrapy.Scheduler.RedisExt;
-using NScrapy.Infra.ConfigProvider;
 
 namespace NScrapy.DownloaderShell
 {
