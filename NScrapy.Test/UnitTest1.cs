@@ -3,7 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NScrapy.Infra;
 using NScrapy.Infra.Attributes.SpiderAttributes;
-using NScrapy.Infra.ConfigProvider;
+
 using NScrapy.Infra.Pipeline;
 using NScrapy.Shell;
 using System;
@@ -188,6 +188,7 @@ namespace NScrapy.Test
         [TestMethod]
         public void ZookeeperConfigProviderTest()
         {
+#if !EXCLUDE_ZOOKEEPER
             var config = new ZookeeperConfigProvider();
             ZkHelper.Create("/nscrapy/conf", $"appsetting.{Guid.NewGuid().ToString()}.json");
             ZkHelper.GetAsync("/nscrapy/conf");
@@ -195,27 +196,33 @@ namespace NScrapy.Test
             ZkHelper.GetAsync("/nscrapy/conf");
             ZkHelper.SetAsync("/nscrapy/conf", $"appsetting.{Guid.NewGuid().ToString()}.json");
             Thread.Sleep(10000);
+#endif
         }
 
         [TestMethod]
         public void ZKHelperCreateTest()
         {
+#if !EXCLUDE_ZOOKEEPER
             var data = Guid.NewGuid().ToString();
             ZkHelper.Create("/nscrapy/conf/1/dev", data);
             var returnedData = ZkHelper.GetAsync("/nscrapy/conf/1/dev").Result;
             Assert.AreEqual(data, returnedData);
+#endif
         }
 
         [TestMethod]
         public void ZKHeperCreateConfigTest()
         {
+#if !EXCLUDE_ZOOKEEPER
             var data = File.ReadAllText("appsetting.json");
             ZkHelper.SetAsync("/nscrapy/conf", data);
+#endif
         }
 
         [TestMethod]
         public void ZKHelperDeleteTest()
         {
+#if !EXCLUDE_ZOOKEEPER
             var data = Guid.NewGuid().ToString();
             ZkHelper.Create("/nscrapy/conf/1/dev", data);
             if(!ZkHelper.Exists("/nscrapy/conf/1/dev"))
@@ -225,6 +232,7 @@ namespace NScrapy.Test
             ZkHelper.Delete("/nscrapy/conf/1/dev");
             
             Assert.IsFalse(ZkHelper.Exists("/nscrapy/conf/1/dev"));
+#endif
         }
 
         private string GetLogContent(string logPath)
@@ -290,7 +298,7 @@ namespace NScrapy.Test
         List<string> TitleSelector = new List<string>();
         List<string> TimeSelector = new List<string>();
         private string startingTime = DateTime.Now.ToString("yyyyMMddhhmm");
-        private Regex salaryReg = new Regex(@"(\d+)-(\d+)Íò");
+        private Regex salaryReg = new Regex(@"(\d+)-(\d+)ï¿½ï¿½");
         public JobSpider2()
         {
             // FirmSelector.Add(".title-info h1::attr(text)");

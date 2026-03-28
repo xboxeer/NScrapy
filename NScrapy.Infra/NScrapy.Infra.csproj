@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.0</TargetFramework>
-<NoWarn>$(NoWarn);NU1605</NoWarn>
+    <TargetFramework>net10.0</TargetFramework>
+    <NoWarn>$(NoWarn);NU1605</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -16,13 +16,18 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="HtmlAgilityPack" Version="1.8.1" />
-    <PackageReference Include="log4net" Version="2.0.10" />
-    <PackageReference Include="Microsoft.Extensions.Configuration" Version="2.0.1" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="2.0.1" />
-    <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
-    <PackageReference Include="HtmlAgilityPack.CssSelectors.NetCore" Version="1.1.0" />
-    <PackageReference Include="ZooKeeperNetEx" Version="3.4.12" />
+    <PackageReference Include="Fizzler.Systems.HtmlAgilityPack" Version="1.2.1" />
+    <PackageReference Include="HtmlAgilityPack" Version="1.11.61" />
+    <PackageReference Include="log4net" Version="2.0.17" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="ConfigProvider\ZookeeperConfigProvider.cs" />
+    <Compile Remove="ConfigProvider\ConfigProviderFactory.cs" />
+    <Compile Remove="ConfigProvider\DefaultConfigProvider.cs" />
   </ItemGroup>
 
   <ItemGroup>

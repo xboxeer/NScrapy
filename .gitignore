@@ -1,0 +1,29 @@
+# .NET build outputs
+bin/
+obj/
+*.user
+*.suo
+*.cache
+*.log
+
+# IDE
+.vs/
+.vscode/
+.idea/
+
+# Test results
+TestResults/
+*.trx
+
+# Debug HTML (from demo runs)
+lianjia_*.html
+lianjia_houses_*.csv
+
+# macOS
+.DS_Store
+
+# Rider / .dotnet
+*.dll
+*.pdb
+*.deps.json
+*.runtimeconfig.json

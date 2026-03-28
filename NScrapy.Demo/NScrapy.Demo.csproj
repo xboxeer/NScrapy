@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="log4net" Version="2.0.17" />
+    <PackageReference Include="HtmlAgilityPack" Version="1.11.61" />
+    <PackageReference Include="Fizzler.Systems.HtmlAgilityPack" Version="1.2.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NScrapy.Downloader\NScrapy.Downloader.csproj" />
+    <ProjectReference Include="..\NScrapy.Engine\NScrapy.Engine.csproj" />
+    <ProjectReference Include="..\NScrapy.Infra\NScrapy.Infra.csproj" />
+    <ProjectReference Include="..\NScrapy.Scheduler\NScrapy.Scheduler.csproj" />
+    <ProjectReference Include="..\NScrapy.Spider\NScrapy.Spider.csproj" />
+    <ProjectReference Include="..\NScrapy\NScrapy.Shell.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="appsetting.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>
