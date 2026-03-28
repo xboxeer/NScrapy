@@ -17,6 +17,7 @@
     <ProjectReference Include="..\NScrapy.Downloader\NScrapy.Downloader.csproj" />
     <ProjectReference Include="..\NScrapy.Engine\NScrapy.Engine.csproj" />
     <ProjectReference Include="..\NScrapy.Infra\NScrapy.Infra.csproj" />
+    <ProjectReference Include="..\NScrapy.Core\NScrapy.Core.csproj" />
     <ProjectReference Include="..\NScrapy.Spider\NScrapy.Spider.csproj" />
     <ProjectReference Include="..\NScrapy\NScrapy.Shell.csproj" />
   </ItemGroup>
