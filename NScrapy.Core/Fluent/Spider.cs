@@ -208,41 +208,13 @@ namespace NScrapy
             var server = parts.Length > 0 ? parts[0] : "localhost";
             var port = parts.Length > 1 ? parts[1] : "6379";
 
-            // Use reflection to set the private properties on RedisSchedulerContext
-            var redisContextType = typeof(RedisSchedulerContext);
-            var instance = RedisSchedulerContext.Current;
-
-            // Set RedisServer
-            var serverProp = redisContextType.GetProperty("RedisServer");
-            if (serverProp != null && serverProp.CanWrite)
-            {
-                serverProp.SetValue(instance, server);
-            }
-
-            // Set RedisPort
-            var portProp = redisContextType.GetProperty("RedisPort");
-            if (portProp != null && portProp.CanWrite)
-            {
-                portProp.SetValue(instance, port);
-            }
-
-            // Set ReceiverQueue
-            var receiverQueueProp = redisContextType.GetProperty("ReceiverQueue");
-            if (receiverQueueProp != null && receiverQueueProp.CanWrite)
-            {
-                receiverQueueProp.SetValue(instance, config.ReceiverQueue);
-            }
-
-            // Set ResponseQueue
-            var responseQueueProp = redisContextType.GetProperty("ResponseQueue");
-            if (responseQueueProp != null && responseQueueProp.CanWrite)
-            {
-                responseQueueProp.SetValue(instance, config.ResponseQueue);
-            }
-
-            // Reconnect with new settings
-            var connectMethod = redisContextType.GetMethod("Connect", BindingFlags.NonPublic | BindingFlags.Instance);
-            connectMethod?.Invoke(instance, null);
+            // Set config values BEFORE RedisSchedulerContext singleton is initialized
+            // RedisSchedulerContext.Connect() reads these values at runtime
+            var context = NScrapyContext.GetInstance();
+            context.CurrentConfig["AppSettings:Scheduler.RedisExt:RedisServer"] = server;
+            context.CurrentConfig["AppSettings:Scheduler.RedisExt:RedisPort"] = port;
+            context.CurrentConfig["AppSettings:Scheduler.RedisExt:ReceiverQueue"] = config.ReceiverQueue;
+            context.CurrentConfig["AppSettings:Scheduler.RedisExt:ResponseQueue"] = config.ResponseQueue;
         }
 
         internal void ProcessItem<T>(T item) where T : class
