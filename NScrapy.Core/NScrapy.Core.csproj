@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>NScrapy</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NScrapy.Engine\NScrapy.Engine.csproj" />
+    <ProjectReference Include="..\NScrapy.Infra\NScrapy.Infra.csproj" />
+    <ProjectReference Include="..\NScrapy.Scheduler\NScrapy.Scheduler.csproj" />
+    <ProjectReference Include="..\NScrapy.Spider\NScrapy.Spider.csproj" />
+  </ItemGroup>
+
+</Project>
