@@ -149,6 +149,12 @@ namespace NScrapy
             }
         }
 
+        // Override the abstract ResponseHandler from base Spider class
+        public override void ResponseHandler(IResponse response)
+        {
+            HandleResponse(response);
+        }
+
         private void HandleResponse(IResponse response)
         {
             try
