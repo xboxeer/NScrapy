@@ -2,7 +2,172 @@
 ![buildpass](https://img.shields.io/badge/build-pass-blue.svg) ![license](https://img.shields.io/badge/License-Apache2.0-yellowgreen.svg) ![netversion](https://img.shields.io/badge/.netcore-2.0-lightgrey.svg) ![release](https://img.shields.io/badge/release-v0.1-blue.svg)
 ## NScrapy is a Distributed Spider Framework based on .net core and Redis. the idea of NScrapy comes from Scrapy, so you can write the spider in a very similar way to Scrapy 
 ## NScrapy 是基于.net core 异步编程框架,Redis内存存储的一款开源分布式爬虫框架, NScrapy的整体思想源于知名的python爬虫框架Scrapy,整体上的写法也接近于Scrapy
-## NScrapy Sample code
+
+---
+
+## 🚀 Fluent API (新版流式 API)
+
+### 中文
+
+NScrapy 提供全新的流式 API，让爬虫编写更加简洁直观。通过 `NScrapy.CreateSpider()` 可以链式调用配置爬虫行为，支持本地运行和分布式运行两种模式。
+
+**本地爬虫示例：**
+
+```csharp
+// Local spider
+NScrapy.CreateSpider("MySpider")
+    .StartUrl("https://example.com")
+    .OnResponse(r => {
+        Console.WriteLine(r.CssSelector("title::text").Extract());
+    })
+    .AddPipeline<MyPipeline>()
+    .Configure(o => o.Concurrency = 5)
+    .Run();
+```
+
+**分布式爬虫示例：**
+
+```csharp
+// Distributed spider
+NScrapy.CreateSpider("MySpider")
+    .StartUrl("https://example.com")
+    .OnResponse(r => { /* parse */ })
+    .Distributed(d => d
+        .UseRedis("localhost:6379")
+        .ReceiverQueue("nscrapy:requests")
+        .ResponseQueue("nscrapy:responses")
+    )
+    .Run();
+```
+
+### SpiderOptions 配置项
+
+通过 `.Configure(o => { ... })` 可以设置以下选项：
+
+| 选项 | 类型 | 说明 |
+|------|------|------|
+| `Concurrency` | `int` | 并发请求数，默认 1 |
+| `DelayMs` | `int` | 请求间隔（毫秒），默认 0 |
+| `MaxRetries` | `int` | 最大重试次数，默认 3 |
+| `TimeoutMs` | `int` | 请求超时（毫秒），默认 30000 |
+| `UserAgents` | `List<string>` | User-Agent 列表，随机选用 |
+
+**示例：**
+
+```csharp
+NScrapy.CreateSpider("MySpider")
+    .StartUrl("https://example.com")
+    .OnResponse(r => { /* parse */ })
+    .Configure(o => {
+        o.Concurrency = 5;
+        o.DelayMs = 1000;
+        o.MaxRetries = 3;
+        o.TimeoutMs = 15000;
+        o.UserAgents = new List<string> {
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
+        };
+    })
+    .Run();
+```
+
+### JsRenderMiddleware (JS 渲染中间件)
+
+启用 JavaScript 渲染支持（用于抓取 SPA 页面的内容）：
+
+```csharp
+NScrapy.CreateSpider("MySpider")
+    .StartUrl("https://example.com")
+    .OnResponse(r => { /* parse */ })
+    .AddDownloaderMiddleware<JsRenderMiddleware>()
+    .Run();
+```
+
+> ⚠️ 注意：`JsRenderMiddleware` 目前为存根实现，具体功能开发中。
+
+---
+
+### English
+
+NScrapy provides a brand-new Fluent API for writing spiders in a concise and intuitive chain-call style. Use `NScrapy.CreateSpider()` to configure and run spiders, supporting both local and distributed modes.
+
+**Local Spider Example:**
+
+```csharp
+// Local spider
+NScrapy.CreateSpider("MySpider")
+    .StartUrl("https://example.com")
+    .OnResponse(r => {
+        Console.WriteLine(r.CssSelector("title::text").Extract());
+    })
+    .AddPipeline<MyPipeline>()
+    .Configure(o => o.Concurrency = 5)
+    .Run();
+```
+
+**Distributed Spider Example:**
+
+```csharp
+// Distributed spider
+NScrapy.CreateSpider("MySpider")
+    .StartUrl("https://example.com")
+    .OnResponse(r => { /* parse */ })
+    .Distributed(d => d
+        .UseRedis("localhost:6379")
+        .ReceiverQueue("nscrapy:requests")
+        .ResponseQueue("nscrapy:responses")
+    )
+    .Run();
+```
+
+### SpiderOptions
+
+Configure spider behavior via `.Configure(o => { ... })`:
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `Concurrency` | `int` | Number of concurrent requests, default 1 |
+| `DelayMs` | `int` | Delay between requests (ms), default 0 |
+| `MaxRetries` | `int` | Max retry count, default 3 |
+| `TimeoutMs` | `int` | Request timeout (ms), default 30000 |
+| `UserAgents` | `List<string>` | User-Agent list, randomly selected |
+
+**Example:**
+
+```csharp
+NScrapy.CreateSpider("MySpider")
+    .StartUrl("https://example.com")
+    .OnResponse(r => { /* parse */ })
+    .Configure(o => {
+        o.Concurrency = 5;
+        o.DelayMs = 1000;
+        o.MaxRetries = 3;
+        o.TimeoutMs = 15000;
+        o.UserAgents = new List<string> {
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
+        };
+    })
+    .Run();
+```
+
+### JsRenderMiddleware (JS Rendering Middleware)
+
+Enable JavaScript rendering support (for crawling SPA pages):
+
+```csharp
+NScrapy.CreateSpider("MySpider")
+    .StartUrl("https://example.com")
+    .OnResponse(r => { /* parse */ })
+    .AddDownloaderMiddleware<JsRenderMiddleware>()
+    .Run();
+```
+
+> ⚠️ Note: `JsRenderMiddleware` is currently a stub implementation; full functionality is under development.
+
+---
+
+## NScrapy Sample code (Legacy API)
 Below is a sample of NScrapy, the sample will visit Liepin, which is a Recruit web site
 Based on the seed URL defined in the [URL] attribute, NScrapy will visit each Postion information in detail page(the ParseItem method) , and visit the next page automatically(the VisitPage method). It is not necessary for the Spider writer to know how the Spiders distributed in different machine/process communicate with each other, and how the Downloader process get the urt that need to download, just tell NScrapy the seed URL, inhirt Spider.Spdier class and write some call back, NScrapy will take the rest of the work
 NScrapy support different kind of extension, including add your own DownloaderMiddleware, config HTTP header, user agent pool.
@@ -193,4 +358,3 @@ Usage:
       { "Pipeline": "NScrapy.Project.MongoItemPipeline" },
       { "Pipeline": "NScrapy.Project.CSVItemPipeline" }
     ],
-  
