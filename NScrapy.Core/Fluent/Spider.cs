@@ -1,0 +1,230 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using global::NScrapy.Infra;
+using NScrapy.Scheduler;
+using NScrapy.Scheduler.RedisExt;
+using NScrapy.Engine;
+
+namespace NScrapy.Core.Fluent
+{
+    public interface IFluentSpider : global::NScrapy.Infra.ISpider
+    {
+        string Name { get; }
+        bool IsDistributed { get; }
+        void Start();
+        void Stop();
+        Task RunAsync(CancellationToken cancellationToken = default);
+        event EventHandler<Exception> OnError;
+    }
+
+    public class Spider : global::NScrapy.Spider.Spider, IFluentSpider
+    {
+        private readonly string _name;
+        private readonly List<string> _startUrls;
+        private readonly Action<IResponse> _responseHandler;
+        private readonly Dictionary<Type, Action<object, global::NScrapy.Infra.ISpider>> _itemHandlers;
+        private readonly Action<Exception, global::NScrapy.Infra.ISpider> _errorHandler;
+        private readonly List<IPipeline> _pipelines;
+        private readonly List<IDownloaderMiddleware> _downloaderMiddlewares;
+        private readonly List<ISpiderMiddleware> _spiderMiddlewares;
+        private readonly SpiderOptions _options;
+        private readonly bool _isDistributed;
+        private CancellationTokenSource _cts;
+        private bool _isRunning;
+
+        public string Name => _name;
+        public bool IsDistributed => _isDistributed;
+
+        public event EventHandler<Exception> OnError;
+
+        internal Spider(
+            string name,
+            List<string> startUrls,
+            Action<IResponse> responseHandler,
+            Dictionary<Type, Action<object, ISpider>> itemHandlers,
+            Action<Exception, ISpider> errorHandler,
+            List<IPipeline> pipelines,
+            List<IDownloaderMiddleware> downloaderMiddlewares,
+            List<ISpiderMiddleware> spiderMiddlewares,
+            SpiderOptions options,
+            bool isDistributed)
+        {
+            _name = name;
+            _startUrls = startUrls ?? new List<string>();
+            _responseHandler = responseHandler;
+            _itemHandlers = itemHandlers ?? new Dictionary<Type, Action<object, ISpider>>();
+            _errorHandler = errorHandler;
+            _pipelines = pipelines ?? new List<IPipeline>();
+            _downloaderMiddlewares = downloaderMiddlewares ?? new List<IDownloaderMiddleware>();
+            _spiderMiddlewares = spiderMiddlewares ?? new List<ISpiderMiddleware>();
+            _options = options ?? new SpiderOptions();
+            _isDistributed = isDistributed;
+        }
+
+        public void Start()
+        {
+            var context = NScrapyContext.GetInstance();
+            context.CurrentSpider = this;
+
+            if (_isDistributed && _options.DistributedConfig != null)
+            {
+                SetupDistributedScheduler();
+            }
+            else
+            {
+                SetupInMemoryScheduler();
+            }
+
+            context.CurrentEngine = new NScrapyEngine();
+            _cts = new CancellationTokenSource();
+            _isRunning = true;
+        }
+
+        public void Stop()
+        {
+            _isRunning = false;
+            _cts?.Cancel();
+        }
+
+        public async Task RunAsync(CancellationToken cancellationToken = default)
+        {
+            Start();
+
+            var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _cts?.Token ?? CancellationToken.None);
+
+            try
+            {
+                await Task.Run(() =>
+                {
+                    foreach (var url in _startUrls)
+                    {
+                        var request = new HttpRequest
+                        {
+                            URL = url,
+                            RequestSpider = this,
+                            Callback = HandleResponse
+                        };
+                        NScrapyContext.CurrentContext.CurrentScheduler.SendRequestToReceiver(request);
+                    }
+
+                    WaitForCompletion(linkedCts.Token);
+                }, linkedCts.Token);
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception ex)
+            {
+                OnError?.Invoke(this, ex);
+                _errorHandler?.Invoke(ex, this);
+            }
+        }
+
+        private void WaitForCompletion(CancellationToken ct)
+        {
+            var scheduler = NScrapyContext.CurrentContext.CurrentScheduler;
+
+            while (!ct.IsCancellationRequested && _isRunning)
+            {
+                if (scheduler is InMemoryScheduler)
+                {
+                    var noMoreItems = RequestReceiver.RequestQueue.Count == 0 &&
+                                      ResponseDistributer.ResponseQueue.Count == 0 &&
+                                      Downloader.Downloader.RunningDownloader == 0;
+
+                    if (noMoreItems)
+                    {
+                        Thread.Sleep(1000);
+                        if (RequestReceiver.RequestQueue.Count == 0 &&
+                            ResponseDistributer.ResponseQueue.Count == 0 &&
+                            Downloader.Downloader.RunningDownloader == 0)
+                        {
+                            break;
+                        }
+                    }
+                }
+
+                Thread.Sleep(500);
+            }
+        }
+
+        public override void ResponseHandler(IResponse response)
+        {
+            HandleResponse(response);
+        }
+
+        private void HandleResponse(IResponse response)
+        {
+            try
+            {
+                foreach (var middleware in _spiderMiddlewares)
+                {
+                    middleware.PreResponse(response);
+                }
+
+                _responseHandler?.Invoke(response);
+
+                foreach (var middleware in _spiderMiddlewares)
+                {
+                    middleware.PostReponse(response);
+                }
+            }
+            catch (Exception ex)
+            {
+                OnError?.Invoke(this, ex);
+                _errorHandler?.Invoke(ex, this);
+            }
+        }
+
+        private void SetupInMemoryScheduler()
+        {
+            var scheduler = new InMemoryScheduler();
+            var context = NScrapyContext.GetInstance();
+            context.CurrentScheduler = scheduler;
+            context.UrlFilter = scheduler.UrlFilter;
+        }
+
+        private void SetupDistributedScheduler()
+        {
+            var config = _options.DistributedConfig;
+            ConfigureRedisSchedulerContext(config);
+
+            var scheduler = new RedisScheduler();
+            var context = NScrapyContext.GetInstance();
+            context.CurrentScheduler = scheduler;
+            context.UrlFilter = scheduler.UrlFilter;
+        }
+
+        private void ConfigureRedisSchedulerContext(DistributedConfig config)
+        {
+            var parts = config.RedisConnectionString.Split(':');
+            var server = parts.Length > 0 ? parts[0] : "localhost";
+            var port = parts.Length > 1 ? parts[1] : "6379";
+
+            var context = NScrapyContext.GetInstance();
+            context.CurrentConfig["AppSettings:Scheduler.RedisExt:RedisServer"] = server;
+            context.CurrentConfig["AppSettings:Scheduler.RedisExt:RedisPort"] = port;
+            context.CurrentConfig["AppSettings:Scheduler.RedisExt:ReceiverQueue"] = config.ReceiverQueue;
+            context.CurrentConfig["AppSettings:Scheduler.RedisExt:ResponseQueue"] = config.ResponseQueue;
+        }
+
+        internal void ProcessItem<T>(T item) where T : class
+        {
+            if (_itemHandlers.TryGetValue(typeof(T), out var handler))
+            {
+                handler(item, this);
+            }
+
+            foreach (var pipeline in _pipelines)
+            {
+                if (pipeline is IPipeline<T> typedPipeline)
+                {
+                    typedPipeline.ProcessItem(item, this);
+                }
+            }
+        }
+    }
+}

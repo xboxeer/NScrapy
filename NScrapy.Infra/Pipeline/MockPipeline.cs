@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -9,6 +9,14 @@ namespace NScrapy.Infra.Pipeline
         public void ProcessItem(MockItem item, ISpider spider)
         {
             NScrapyContext.CurrentContext.Log.Info($"Mock Pipeline Processed, Mock Value={item.MockValue}");
+        }
+
+        void IPipeline.ProcessItem(object item, ISpider spider)
+        {
+            if (item is MockItem mockItem)
+            {
+                ProcessItem(mockItem, spider);
+            }
         }
     }
     public class MockItem
