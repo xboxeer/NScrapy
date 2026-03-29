@@ -2,9 +2,9 @@ namespace NScrapy
 {
     public static class NScrapy
     {
-        public static ISpiderBuilder CreateSpider(string name)
+        public static global::NScrapy.Core.Fluent.ISpiderBuilder CreateSpider(string name)
         {
-            return new SpiderBuilder().Name(name);
+            return new global::NScrapy.Core.Fluent.SpiderBuilder().Name(name);
         }
     }
 }

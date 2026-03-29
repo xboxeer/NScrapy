@@ -1,9 +1,11 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NScrapy;
+using NScrapy.Core.Fluent;
 using NScrapy.Infra;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using FluentSpider = NScrapy.Core.Fluent.Spider;
 
 namespace NScrapy.Test
 {
@@ -30,6 +32,14 @@ namespace NScrapy.Test
                 ReceivedItem = item;
                 ReceivedSpider = spider;
             }
+
+            void IPipeline.ProcessItem(object item, ISpider spider)
+            {
+                if (item is TestItem testItem)
+                {
+                    ProcessItem(testItem, spider);
+                }
+            }
         }
 
         #endregion
@@ -39,7 +49,7 @@ namespace NScrapy.Test
         [TestMethod]
         public void TestSpiderBuilder_CanCreateSpiderWithName()
         {
-            var spider = NScrapy.NScrapy.CreateSpider("TestSpider");
+            var spider = NScrapy.CreateSpider("TestSpider");
             Assert.IsNotNull(spider);
             Assert.IsInstanceOfType(spider, typeof(ISpiderBuilder));
         }
@@ -51,7 +61,7 @@ namespace NScrapy.Test
         [TestMethod]
         public void TestSpiderBuilder_BuildCreatesSpider()
         {
-            var builder = NScrapy.NScrapy.CreateSpider("TestSpider")
+            var builder = NScrapy.CreateSpider("TestSpider")
                 .StartUrl("https://example.com");
 
             var spider = builder.Build();
@@ -67,15 +77,15 @@ namespace NScrapy.Test
         [TestMethod]
         public void TestSpiderBuilder_SetsStartUrls()
         {
-            var builder = NScrapy.NScrapy.CreateSpider("TestSpider")
+            var builder = NScrapy.CreateSpider("TestSpider")
                 .StartUrl("https://example.com/page1")
                 .StartUrls(new[] { "https://example.com/page2", "https://example.com/page3" });
 
-            var spider = builder.Build() as Spider;
+            var spider = builder.Build() as FluentSpider;
             Assert.IsNotNull(spider);
 
             // Use reflection to verify internal _startUrls field
-            var startUrlsField = typeof(Spider).GetField("_startUrls", BindingFlags.NonPublic | BindingFlags.Instance);
+            var startUrlsField = typeof(FluentSpider).GetField("_startUrls", BindingFlags.NonPublic | BindingFlags.Instance);
             Assert.IsNotNull(startUrlsField);
             var startUrls = startUrlsField.GetValue(spider) as List<string>;
             Assert.IsNotNull(startUrls);
@@ -92,14 +102,14 @@ namespace NScrapy.Test
         [TestMethod]
         public void TestSpiderBuilder_AddsPipeline()
         {
-            var builder = NScrapy.NScrapy.CreateSpider("TestSpider")
+            var builder = NScrapy.CreateSpider("TestSpider")
                 .AddPipeline<TestPipeline>();
 
-            var spider = builder.Build() as Spider;
+            var spider = builder.Build() as FluentSpider;
             Assert.IsNotNull(spider);
 
             // Use reflection to verify internal _pipelines field
-            var pipelinesField = typeof(Spider).GetField("_pipelines", BindingFlags.NonPublic | BindingFlags.Instance);
+            var pipelinesField = typeof(FluentSpider).GetField("_pipelines", BindingFlags.NonPublic | BindingFlags.Instance);
             Assert.IsNotNull(pipelinesField);
             var pipelines = pipelinesField.GetValue(spider) as List<IPipeline>;
             Assert.IsNotNull(pipelines);
@@ -175,7 +185,7 @@ namespace NScrapy.Test
         [TestMethod]
         public void TestSpiderBuilder_ConfiguresOptions()
         {
-            var builder = NScrapy.NScrapy.CreateSpider("TestSpider")
+            var builder = NScrapy.CreateSpider("TestSpider")
                 .Configure(options =>
                 {
                     options.Concurrency = 20;
@@ -184,11 +194,11 @@ namespace NScrapy.Test
                     options.TimeoutMs = 60000;
                 });
 
-            var spider = builder.Build() as Spider;
+            var spider = builder.Build() as FluentSpider;
             Assert.IsNotNull(spider);
 
             // Use reflection to verify internal _options field
-            var optionsField = typeof(Spider).GetField("_options", BindingFlags.NonPublic | BindingFlags.Instance);
+            var optionsField = typeof(FluentSpider).GetField("_options", BindingFlags.NonPublic | BindingFlags.Instance);
             Assert.IsNotNull(optionsField);
             var options = optionsField.GetValue(spider) as SpiderOptions;
             Assert.IsNotNull(options);

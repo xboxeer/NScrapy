@@ -3,19 +3,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using NScrapy.Infra;
+using global::NScrapy.Infra;
 using NScrapy.Scheduler;
 using NScrapy.Engine;
 
-namespace NScrapy
+namespace NScrapy.Core.Fluent
 {
     public class SpiderBuilder : ISpiderBuilder
     {
         private string _name;
         private List<string> _startUrls = new List<string>();
         private Action<IResponse> _responseHandler;
-        private Dictionary<Type, Action<object, ISpider>> _itemHandlers = new Dictionary<Type, Action<object, ISpider>>();
-        private Action<Exception, ISpider> _errorHandler;
+        private Dictionary<Type, Action<object, global::NScrapy.Infra.ISpider>> _itemHandlers = new Dictionary<Type, Action<object, global::NScrapy.Infra.ISpider>>();
+        private Action<Exception, global::NScrapy.Infra.ISpider> _errorHandler;
         private List<IPipeline> _pipelines = new List<IPipeline>();
         private List<IDownloaderMiddleware> _downloaderMiddlewares = new List<IDownloaderMiddleware>();
         private List<ISpiderMiddleware> _spiderMiddlewares = new List<ISpiderMiddleware>();
@@ -59,7 +59,7 @@ namespace NScrapy
             return this;
         }
 
-        public ISpiderBuilder OnItem<T>(Action<T, ISpider> handler) where T : class
+        public ISpiderBuilder OnItem<T>(Action<T, global::NScrapy.Infra.ISpider> handler) where T : class
         {
             if (handler != null)
             {
@@ -68,7 +68,7 @@ namespace NScrapy
             return this;
         }
 
-        public ISpiderBuilder OnError(Action<Exception, ISpider> handler)
+        public ISpiderBuilder OnError(Action<Exception, global::NScrapy.Infra.ISpider> handler)
         {
             _errorHandler = handler;
             return this;
@@ -119,7 +119,7 @@ namespace NScrapy
             return this;
         }
 
-        public ISpider Build()
+        public Spider Build()
         {
             return new Spider(
                 _name,

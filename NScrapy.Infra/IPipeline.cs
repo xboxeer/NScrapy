@@ -4,8 +4,13 @@ using System.Text;
 
 namespace NScrapy.Infra
 {
-    public interface IPipeline<T>
+    public interface IPipeline
     {
-        void ProcessItem(T item, ISpider spider);
+        void ProcessItem(object item, ISpider spider);
+    }
+
+    public interface IPipeline<T> : IPipeline
+    {
+        new void ProcessItem(T item, ISpider spider);
     }
 }

@@ -1,4 +1,4 @@
-﻿using NScrapy.Infra;
+using NScrapy.Infra;
 using System.IO;
 using System;
 using System.Collections.Generic;
@@ -15,6 +15,14 @@ namespace NScrapy.Project
             var info = $"{item.Title},{item.Firm},{item.SalaryFrom},{item.SalaryTo},{item.Location},{item.Time},{item.URL},{System.Environment.NewLine}";
             Console.WriteLine(info);
             File.AppendAllText($"output-{startTime}.csv", info,Encoding.UTF8);    
+        }
+
+        void IPipeline.ProcessItem(object item, ISpider spider)
+        {
+            if (item is JobItem jobItem)
+            {
+                ProcessItem(jobItem, spider);
+            }
         }
     }
 }

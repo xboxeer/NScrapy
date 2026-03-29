@@ -3,20 +3,30 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using NScrapy.Infra;
+using global::NScrapy.Infra;
 using NScrapy.Scheduler;
 using NScrapy.Scheduler.RedisExt;
 using NScrapy.Engine;
 
-namespace NScrapy
+namespace NScrapy.Core.Fluent
 {
-    public class Spider : NScrapy.Spider.Spider, ISpider
+    public interface IFluentSpider : global::NScrapy.Infra.ISpider
+    {
+        string Name { get; }
+        bool IsDistributed { get; }
+        void Start();
+        void Stop();
+        Task RunAsync(CancellationToken cancellationToken = default);
+        event EventHandler<Exception> OnError;
+    }
+
+    public class Spider : global::NScrapy.Spider.Spider, IFluentSpider
     {
         private readonly string _name;
         private readonly List<string> _startUrls;
         private readonly Action<IResponse> _responseHandler;
-        private readonly Dictionary<Type, Action<object, ISpider>> _itemHandlers;
-        private readonly Action<Exception, ISpider> _errorHandler;
+        private readonly Dictionary<Type, Action<object, global::NScrapy.Infra.ISpider>> _itemHandlers;
+        private readonly Action<Exception, global::NScrapy.Infra.ISpider> _errorHandler;
         private readonly List<IPipeline> _pipelines;
         private readonly List<IDownloaderMiddleware> _downloaderMiddlewares;
         private readonly List<ISpiderMiddleware> _spiderMiddlewares;
@@ -56,11 +66,9 @@ namespace NScrapy
 
         public void Start()
         {
-            // Initialize context with spider
             var context = NScrapyContext.GetInstance();
             context.CurrentSpider = this;
 
-            // Set up scheduler based on configuration
             if (_isDistributed && _options.DistributedConfig != null)
             {
                 SetupDistributedScheduler();
@@ -70,10 +78,7 @@ namespace NScrapy
                 SetupInMemoryScheduler();
             }
 
-            // Set up engine
             context.CurrentEngine = new NScrapyEngine();
-
-            // Start the spider
             _cts = new CancellationTokenSource();
             _isRunning = true;
         }
@@ -94,7 +99,6 @@ namespace NScrapy
             {
                 await Task.Run(() =>
                 {
-                    // Send start URLs to scheduler
                     foreach (var url in _startUrls)
                     {
                         var request = new HttpRequest
@@ -106,13 +110,11 @@ namespace NScrapy
                         NScrapyContext.CurrentContext.CurrentScheduler.SendRequestToReceiver(request);
                     }
 
-                    // Wait for completion or cancellation
                     WaitForCompletion(linkedCts.Token);
                 }, linkedCts.Token);
             }
             catch (OperationCanceledException)
             {
-                // Expected on cancellation
             }
             catch (Exception ex)
             {
@@ -135,12 +137,12 @@ namespace NScrapy
 
                     if (noMoreItems)
                     {
-                        Thread.Sleep(1000); // Wait a bit more to ensure everything is processed
+                        Thread.Sleep(1000);
                         if (RequestReceiver.RequestQueue.Count == 0 &&
                             ResponseDistributer.ResponseQueue.Count == 0 &&
                             Downloader.Downloader.RunningDownloader == 0)
                         {
-                            break; // All done
+                            break;
                         }
                     }
                 }
@@ -149,7 +151,6 @@ namespace NScrapy
             }
         }
 
-        // Override the abstract ResponseHandler from base Spider class
         public override void ResponseHandler(IResponse response)
         {
             HandleResponse(response);
@@ -159,16 +160,13 @@ namespace NScrapy
         {
             try
             {
-                // Run spider middlewares pre-response
                 foreach (var middleware in _spiderMiddlewares)
                 {
                     middleware.PreResponse(response);
                 }
 
-                // Call the user's response handler
                 _responseHandler?.Invoke(response);
 
-                // Run spider middlewares post-response
                 foreach (var middleware in _spiderMiddlewares)
                 {
                     middleware.PostReponse(response);
@@ -191,7 +189,6 @@ namespace NScrapy
 
         private void SetupDistributedScheduler()
         {
-            // Configure Redis scheduler context before creating RedisScheduler
             var config = _options.DistributedConfig;
             ConfigureRedisSchedulerContext(config);
 
@@ -203,13 +200,10 @@ namespace NScrapy
 
         private void ConfigureRedisSchedulerContext(DistributedConfig config)
         {
-            // Parse connection string to get server and port
             var parts = config.RedisConnectionString.Split(':');
             var server = parts.Length > 0 ? parts[0] : "localhost";
             var port = parts.Length > 1 ? parts[1] : "6379";
 
-            // Set config values BEFORE RedisSchedulerContext singleton is initialized
-            // RedisSchedulerContext.Connect() reads these values at runtime
             var context = NScrapyContext.GetInstance();
             context.CurrentConfig["AppSettings:Scheduler.RedisExt:RedisServer"] = server;
             context.CurrentConfig["AppSettings:Scheduler.RedisExt:RedisPort"] = port;
@@ -224,7 +218,6 @@ namespace NScrapy
                 handler(item, this);
             }
 
-            // Run through pipelines
             foreach (var pipeline in _pipelines)
             {
                 if (pipeline is IPipeline<T> typedPipeline)

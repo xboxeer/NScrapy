@@ -37,5 +37,13 @@ namespace NScrapy.Demo
                 Console.WriteLine($"  💾 {item.Title} | {item.Price}元/月 | {item.District}");
             }
         }
+
+        void IPipeline.ProcessItem(object item, ISpider spider)
+        {
+            if (item is LianjiaRentItem rentItem)
+            {
+                ProcessItem(rentItem, spider);
+            }
+        }
     }
 }

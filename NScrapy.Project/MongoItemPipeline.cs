@@ -1,4 +1,4 @@
-﻿using NScrapy.Infra;
+using NScrapy.Infra;
 using MongoDB;
 using MongoDB.Driver;
 using MongoDB.Driver.Core;
@@ -15,11 +15,19 @@ namespace NScrapy.Project
     public class MongoItemPipeline : IPipeline<House>
     {
         private MongoClient client = new MongoClient("mongodb://localhost:27017");
-        public async  void ProcessItem(House item, ISpider spider)
+        public async void ProcessItem(House item, ISpider spider)
         {
             var db = client.GetDatabase("Lianjia");
             var collection = db.GetCollection<House>("House");
             await collection.InsertOneAsync(item);
+        }
+
+        void IPipeline.ProcessItem(object item, ISpider spider)
+        {
+            if (item is House house)
+            {
+                ProcessItem(house, spider);
+            }
         }
     }
 }

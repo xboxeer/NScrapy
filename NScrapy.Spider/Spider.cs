@@ -13,7 +13,10 @@ namespace NScrapy.Spider
 
         public Spider()
         {
-            NScrapyContext.CurrentContext.CurrentSpider = this;
+            if (NScrapyContext.CurrentContext != null)
+            {
+                NScrapyContext.CurrentContext.CurrentSpider = this;
+            }
         }
 
         public virtual void StartRequests()
