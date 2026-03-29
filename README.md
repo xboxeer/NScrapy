@@ -1,17 +1,24 @@
 # NScrapy
 ![buildpass](https://img.shields.io/badge/build-pass-blue.svg) ![license](https://img.shields.io/badge/License-Apache2.0-yellowgreen.svg) ![netversion](https://img.shields.io/badge/.netcore-2.0-lightgrey.svg) ![release](https://img.shields.io/badge/release-v0.1-blue.svg)
-## NScrapy is a Distributed Spider Framework based on .net core and Redis. the idea of NScrapy comes from Scrapy, so you can write the spider in a very similar way to Scrapy 
-## NScrapy 是基于.net core 异步编程框架,Redis内存存储的一款开源分布式爬虫框架, NScrapy的整体思想源于知名的python爬虫框架Scrapy,整体上的写法也接近于Scrapy
+
+## 简介 / Introduction
+
+NScrapy 是基于 .NET Core 异步编程框架和 Redis 内存存储的开源分布式爬虫框架。NScrapy 的整体思想源于知名的 Python 爬虫框架 Scrapy，整体写法也接近于 Scrapy，支持分布式部署、丰富的中间件扩展以及流式（Fluent）API。
+
+NScrapy is a distributed spider framework based on .NET Core async programming and Redis. Inspired by the famous Python framework Scrapy, NScrapy offers a similar development experience with support for distributed deployment, middleware extensions, and a Fluent API.
 
 ---
 
-## 🚀 Fluent API (新版流式 API)
+## 快速开始 / Quick Start
 
-### 中文
+### 安装 / Installation
 
-NScrapy 提供全新的流式 API，让爬虫编写更加简洁直观。通过 `NScrapy.CreateSpider()` 可以链式调用配置爬虫行为，支持本地运行和分布式运行两种模式。
+```bash
+dotnet add package NScrapy.Infra
+dotnet add package NScrapy.Scheduler
+```
 
-**本地爬虫示例：**
+### 编写你的第一个爬虫 / Write Your First Spider
 
 ```csharp
 // Local spider
@@ -25,369 +32,48 @@ NScrapy.CreateSpider("MySpider")
     .Run();
 ```
 
-**分布式爬虫示例：**
+启动 NScrapy Shell：
+Start the NScrapy Shell:
 
 ```csharp
-// Distributed spider
-NScrapy.CreateSpider("MySpider")
-    .StartUrl("https://example.com")
-    .OnResponse(r => { /* parse */ })
-    .Distributed(d => d
-        .UseRedis("localhost:6379")
-        .ReceiverQueue("nscrapy:requests")
-        .ResponseQueue("nscrapy:responses")
-    )
-    .Run();
+var shell = NScrapy.Shell.NScrapy.GetInstance();
+shell.Crawl("JobSpider");
 ```
-
-### SpiderOptions 配置项
-
-通过 `.Configure(o => { ... })` 可以设置以下选项：
-
-| 选项 | 类型 | 说明 |
-|------|------|------|
-| `Concurrency` | `int` | 并发请求数，默认 1 |
-| `DelayMs` | `int` | 请求间隔（毫秒），默认 0 |
-| `MaxRetries` | `int` | 最大重试次数，默认 3 |
-| `TimeoutMs` | `int` | 请求超时（毫秒），默认 30000 |
-| `UserAgents` | `List<string>` | User-Agent 列表，随机选用 |
-
-**示例：**
-
-```csharp
-NScrapy.CreateSpider("MySpider")
-    .StartUrl("https://example.com")
-    .OnResponse(r => { /* parse */ })
-    .Configure(o => {
-        o.Concurrency = 5;
-        o.DelayMs = 1000;
-        o.MaxRetries = 3;
-        o.TimeoutMs = 15000;
-        o.UserAgents = new List<string> {
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
-        };
-    })
-    .Run();
-```
-
-### JsRenderMiddleware (JS 渲染中间件)
-
-启用 JavaScript 渲染支持（用于抓取 SPA 页面的内容）：
-
-```csharp
-NScrapy.CreateSpider("MySpider")
-    .StartUrl("https://example.com")
-    .OnResponse(r => { /* parse */ })
-    .AddDownloaderMiddleware<JsRenderMiddleware>()
-    .Run();
-```
-
-> ⚠️ 注意：`JsRenderMiddleware` 目前为存根实现，具体功能开发中。
 
 ---
 
-### English
+## Docker 部署 / Docker Deployment
 
-NScrapy provides a brand-new Fluent API for writing spiders in a concise and intuitive chain-call style. Use `NScrapy.CreateSpider()` to configure and run spiders, supporting both local and distributed modes.
+### 简介 / Overview
 
-**Local Spider Example:**
+NScrapy 支持通过 Docker Compose 进行容器化部署，提供三种模式：
 
-```csharp
-// Local spider
-NScrapy.CreateSpider("MySpider")
-    .StartUrl("https://example.com")
-    .OnResponse(r => {
-        Console.WriteLine(r.CssSelector("title::text").Extract());
-    })
-    .AddPipeline<MyPipeline>()
-    .Configure(o => o.Concurrency = 5)
-    .Run();
-```
+NScrapy supports containerized deployment via Docker Compose with three modes:
 
-**Distributed Spider Example:**
+| 模式 / Mode | 适用场景 / Use Case | Redis |
+|---|---|---|
+| **local-only** | 单节点，无需 Redis / Single-node, no Redis | 无 / None (InMemoryScheduler) |
+| **local-redis** | 同主机多工作节点 / Multi-worker on same host | 本地 Redis 容器 / Local Redis container |
+| **managed-redis** | 云端/生产部署 / Cloud / production deploy | 外部 Redis / External Redis |
 
-```csharp
-// Distributed spider
-NScrapy.CreateSpider("MySpider")
-    .StartUrl("https://example.com")
-    .OnResponse(r => { /* parse */ })
-    .Distributed(d => d
-        .UseRedis("localhost:6379")
-        .ReceiverQueue("nscrapy:requests")
-        .ResponseQueue("nscrapy:responses")
-    )
-    .Run();
-```
-
-### SpiderOptions
-
-Configure spider behavior via `.Configure(o => { ... })`:
-
-| Option | Type | Description |
-|--------|------|-------------|
-| `Concurrency` | `int` | Number of concurrent requests, default 1 |
-| `DelayMs` | `int` | Delay between requests (ms), default 0 |
-| `MaxRetries` | `int` | Max retry count, default 3 |
-| `TimeoutMs` | `int` | Request timeout (ms), default 30000 |
-| `UserAgents` | `List<string>` | User-Agent list, randomly selected |
-
-**Example:**
-
-```csharp
-NScrapy.CreateSpider("MySpider")
-    .StartUrl("https://example.com")
-    .OnResponse(r => { /* parse */ })
-    .Configure(o => {
-        o.Concurrency = 5;
-        o.DelayMs = 1000;
-        o.MaxRetries = 3;
-        o.TimeoutMs = 15000;
-        o.UserAgents = new List<string> {
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
-        };
-    })
-    .Run();
-```
-
-### JsRenderMiddleware (JS Rendering Middleware)
-
-Enable JavaScript rendering support (for crawling SPA pages):
-
-```csharp
-NScrapy.CreateSpider("MySpider")
-    .StartUrl("https://example.com")
-    .OnResponse(r => { /* parse */ })
-    .AddDownloaderMiddleware<JsRenderMiddleware>()
-    .Run();
-```
-
-> ⚠️ Note: `JsRenderMiddleware` is currently a stub implementation; full functionality is under development.
-
----
-
-## NScrapy Sample code (Legacy API)
-Below is a sample of NScrapy, the sample will visit Liepin, which is a Recruit web site
-Based on the seed URL defined in the [URL] attribute, NScrapy will visit each Postion information in detail page(the ParseItem method) , and visit the next page automatically(the VisitPage method). It is not necessary for the Spider writer to know how the Spiders distributed in different machine/process communicate with each other, and how the Downloader process get the urt that need to download, just tell NScrapy the seed URL, inhirt Spider.Spdier class and write some call back, NScrapy will take the rest of the work
-NScrapy support different kind of extension, including add your own DownloaderMiddleware, config HTTP header, user agent pool.
-
-如下是一段简单的NScrapy爬虫，该爬虫会抓取猎聘网上所有php的职位信息并做相应的输出
-基于定义在[URL] attribute 中的种子URL，NScrapy会访问每一个职位信息的详细信息页面(ParseItem method)， 并且自动爬取下一页信息(VisitPage method)
-爬虫作者不需要关心如何管理分布式爬虫之间如何互相通信，下载器如何获取待下载队列，下载器池是如何维护的，仅仅需要告诉NScrapy一个种子链接， 继承Spider.Spider类，并完成默认回调函数就可以爬去信息
-NScrapy支持丰富的自定义扩展，包括在配置文件appsetting.json中加入DownloaderMiddware,配置Http请求头，构造User Agent pool等
-
-Usage:
-
-    using NScrapy.Infra;
-    using NScrapy.Infra.Attributes.SpiderAttributes;
-    using System;
-    using System.Collections.Generic;
-    using System.IO;
-    using System.Linq;
-    using System.Text;
-    using System.Threading;
-
-    namespace NScrapy.Project
-    {
-        class Program
-        {
-        static void Main(string[] args)
-        {
-            //Init shell of NScrapy, which will init the context of NScrapy
-            var shell = NScrapy.Shell.NScrapy.GetInstance(); 
-            //Specify the Spider that you want to start
-            shell.Crawl("JobSpider");
-            return;
-        }
-    }
-    [Name(Name = "JobSpider")]
-    [URL("https://www.liepin.com/zhaopin/?industries=&dqs=&salary=&jobKind=&pubTime=30&compkind=&compscale=&industryType=&searchType=1&clean_condition=&isAnalysis=&init=1&sortFlag=15&flushckid=0&fromSearchBtn=1&headckid=bb314f611fde073c&d_headId=4b294eff4ad202db83d4ed085fcbf94b&d_ckId=01fb643c53d14dd44d7991e27c98c51b&d_sfrom=search_prime&d_curPage=0&d_pageSize=40&siTag=k_cloHQj_hyIn0SLM9IfRg~UoKQA1_uiNxxEb8RglVcHg&key=php")]
-    public class JobSpider : Spider.Spider
-    {
-        private string startingTime = DateTime.Now.ToString("yyyyMMddhhmm");
-        public JobSpider()
-        {
-        }
-        //爬取种子链接
-        public override void ResponseHandler(IResponse response)
-        {
-            var httpResponse = response as HttpResponse;
-            var returnValue = response.CssSelector(".job-info h3 a::attr(href)");            
-            var pages = response.CssSelector(".pagerbar a::attr(href)").Extract();
-            foreach (var page in pages)
-            {
-                if (!page.Contains("javascript"))
-                {
-                    NScrapy.Shell.NScrapy.GetInstance().Follow(returnValue,page, VisitPage);
-                }
-            }
-            VisitPage(returnValue);
-        }
-        //翻页
-        private void VisitPage(IResponse returnValue)
-        {
-            var hrefs = returnValue.CssSelector(".job-info h3 a::attr(href)").Extract();
-            foreach (var href in hrefs)
-            {
-                //Use ItemLoader
-                NScrapy.Shell.NScrapy.GetInstance().Follow(returnValue, href, ParseItem);
-            }
-            var pages = returnValue.CssSelector(".pagerbar a::attr(href)").Extract();
-            foreach (var page in pages)
-            {
-                if (!page.Contains("javascript"))
-                {
-                    NScrapy.Shell.NScrapy.GetInstance().Follow(returnValue, page, VisitPage);
-                }
-            }
-        }
-        //在具体岗位的招聘页面上获取信息
-        public void ParseItem(IResponse response)
-        {
-            //Add Field Mapping to the HTML Dom element
-            var itemLoader = new ItemLoader<JobItem>(response);
-            itemLoader.AddFieldMapping("Title", "css:.title-info h1::attr(text)");
-            itemLoader.AddFieldMapping("Title","css:.job-title h1::attr(text)");
-
-            itemLoader.AddFieldMapping("Firm","css:.title-info h3 a::attr(text)");
-            itemLoader.AddFieldMapping("Firm", "css:.title-info h3::attr(text)");
-            itemLoader.AddFieldMapping("Firm","css:.title-info h3");
-            itemLoader.AddFieldMapping("Firm","css:.job-title h2::attr(text)");
-
-            itemLoader.AddFieldMapping("Salary", "css:.job-main-title p::attr(text)");
-            itemLoader.AddFieldMapping("Salary", "css:.job-main-title strong::attr(text)");
-            itemLoader.AddFieldMapping("Salary", "css:.job-item-title p::attr(text)");
-            itemLoader.AddFieldMapping("Salary", "css:.job-item-title");
-
-            itemLoader.AddFieldMapping("Time","css:.job-title-left time::attr(title)");
-            itemLoader.AddFieldMapping("Time","css:.job-title-left time::attr(text)");
-            var item = itemLoader.LoadItem();
-            //#In the example here, simple write the Position Firm information at the console, you can write the information to anywhere else
-            Console.WriteLine(item.Firm);
-        }
-        
-    }
-
-    public class JobItem
-    {
-        public string Firm { get; set; }
-        public string Title { get; set; }
-        public string Salary { get; set; }
-        public string Time { get; set; }
-    }
-    }
-
-## 分布式运行，Redis支持
-## Distributed NScrapy, supported by Redis
-### 修改Project项目中appsetting.json,添加如下节点
-### Modify the appsetting.json in your NScrapy Project as below
-
-    "Scheduler": {
-      "SchedulerType": "NScrapy.Scheduler.RedisExt.RedisScheduler"
-    },
-    "Scheduler.RedisExt": {
-      "RedisServer": "192.168.0.106",//具体的redis地址
-      "RedisPort": "6379",//具体的redis端口
-      "ReceiverQueue": "NScrapy.Downloader",//Downloader监听的队列名称
-      "ResponseQueue": "NScrapy.ResponseQueue"//Spider监听的队列名称
-    }, 
-
-### 修改NScrapy.DownloaderShell.dll同层目录中的appsetting.json，内容同上面一样
-### Modify appsetting.json under NScrapy.DownloaderShell.dll directory
-
-    "Scheduler": {
-      "SchedulerType": "NScrapy.Scheduler.RedisExt.RedisScheduler"
-    },
-    "Scheduler.RedisExt": {
-      "RedisServer": "192.168.0.106",//具体的redis地址 Redis Server
-      "RedisPort": "6379",//具体的redis端口 Redis Server Port
-      "ReceiverQueue": "NScrapy.Downloader",//Downloader监听的队列名称 Queue for Downloader
-      "ResponseQueue": "NScrapy.ResponseQueue"//Spider监听的队列名称 Queue for Spider
-    }, 
-
-### 单独运行DownloaderShell
-### Run the DownloaderShell individually
-
-    dotnet %DownloaderShellPath%/NScrapy.DownloaderShell.dll
-
-### 如果需要将Downloader本身状态更新到Redis，可以添加下面的中间件到DownloaderShell（目前正在开发的[NScrapyWebConsole](https://github.com/xboxeer/NScrapyWebConsole)会从Redis中读取Downloader的状态数据）
-### If you want to update the status of individual Downloader status to Redis, add the below DownloaderShell middleware to appsetting.json(The in develop project [NScrapyWebConsole](https://github.com/xboxeer/NScrapyWebConsole) will read Downloader Status from Redis)
-
-    "DownloaderMiddlewares": [
-      { "Middleware": "NScrapy.DownloaderShell.StatusUpdaterMiddleware" }
-    ],
-   
-## 如果需要将抓取到的内容添加到MongoDB中 可以创建如下PipelineItem
-## If you want to add the data that you captured to a MongoDB, you can add below PipelineItem
-    public class MongoItemPipeline : IPipeline<JobItem>
-    {
-        private MongoClient client = new MongoClient("mongodb://localhost:27017");
-        public async  void ProcessItem(JobItem item, ISpider spider)
-        {
-            var db = client.GetDatabase("Lianjia");
-            var collection = db.GetCollection<JobItem>("JobItem");
-            await collection.InsertOneAsync(item);
-        }
-    }
-## 然后将该Pipeline添加到project 的 appsetting.json中  
-## Add the Pipeline to your project's appsetting.json    
-    "Pipelines": [
-      { "Pipeline": "NScrapy.Project.MongoItemPipeline" }
-    ],
-    
-## 相应的如果想要存储到CSV文件中 也可以添加CSV pipeline
-## You can also save your data in CSV by adding CSV pipeline as below
- 
-     public class CSVItemPipeline : IPipeline<JobItem>
-    {
-        private string startTime = DateTime.Now.ToString("yyyyMMddhhmm");
-        
-        public void ProcessItem(JobItem item, ISpider spider)
-        {
-            var info = $"{item.Title},{item.Firm},{item.SalaryFrom},{item.SalaryTo},{item.Location},{item.Time},{item.URL},{System.Environment.NewLine}";
-            Console.WriteLine(info);
-            File.AppendAllText($"output-{startTime}.csv", info,Encoding.UTF8);    
-        }
-    }
-    
-## 并添加该pipeline item到appsetting.json中
-## Add the pipeline item in appsetting.json 
-  
-    "Pipelines": [
-      { "Pipeline": "NScrapy.Project.MongoItemPipeline" },
-      { "Pipeline": "NScrapy.Project.CSVItemPipeline" }
-    ],
-
----
-
-## 🐳 Docker Deployment
-
-NScrapy supports containerized deployment with Docker Compose across three modes:
-
-| Mode | Use Case | Redis |
-|------|----------|-------|
-| **local-only** | Single-node, no Redis | None (InMemoryScheduler) |
-| **local-redis** | Multi-worker on same host | Local Redis container |
-| **managed-redis** | Cloud / production deploy | External Redis (Azure, ElastiCache, etc.) |
-
-### Prerequisites
+### 前置条件 / Prerequisites
 
 - Docker & Docker Compose v2+
-- .NET 10.0 (for local development/builds)
+- .NET 10.0（用于本地开发构建 / for local development/builds）
 
-### Quick Start
+### 快速启动 / Quick Start
 
-**1. Clone and configure**
+**1. 克隆项目 / Clone the project**
 
 ```bash
 git clone https://github.com/your-org/NScrapy.git
 cd NScrapy
 ```
 
-**2. Create a `.env` file for your mode**
+**2. 创建 `.env` 配置文件 / Create a `.env` config file**
 
 ```bash
+# 托管 Redis 模式示例（如 Azure Redis Cache）
 # Example for managed-redis mode (Azure Redis Cache)
 cat > .env << 'EOF'
 REDIS_ENABLED=true
@@ -398,75 +84,298 @@ REDIS_USESSL=true
 EOF
 ```
 
-**3. Choose your mode and start**
+**3. 选择模式并启动 / Choose your mode and start**
 
 ```bash
+# 模式 1：本地仅限（无 Redis）
 # Mode 1: Local only (no Redis)
 docker-compose up -d
 
+# 模式 2：本地 + 本地 Redis 容器
 # Mode 2: Local + local Redis container
 docker-compose --profile local-redis up -d
 
+# 模式 3：托管 Redis（需先取消 .env 中 Redis 主机注释）
 # Mode 3: Managed Redis (uncomment Redis host in .env first)
 docker-compose up -d
 ```
 
-**4. Scale Spider and Downloader workers**
+**4. 扩缩容 Spider 和 Downloader / Scale Spider and Downloader workers**
 
 ```bash
+# 运行 3 个 Spider 实例和 4 个 Downloader 工作进程
 # Run 3 spider instances and 4 downloader workers
 docker-compose up -d --scale spider=3 --scale downloader=4
 ```
 
-### Configuration
+### 配置说明 / Configuration
 
-All settings are controlled via environment variables. The JSON config files (`appsettings.spider.json`, `appsettings.downloader.json`) serve as defaults; environment variables override them at runtime.
+所有设置通过环境变量控制。JSON 配置文件（`appsettings.spider.json`、`appsettings.downloader.json`）作为默认值，运行时会由环境变量覆盖。
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `REDIS_ENABLED` | Enable Redis scheduler | `false` |
-| `REDIS_HOST` | Redis hostname | `redis` |
-| `REDIS_PORT` | Redis port | `6379` |
-| `REDIS_PASSWORD` | Redis password | _(empty)_ |
-| `REDIS_USESSL` | Use TLS/SSL | `false` |
-| `SCHEDULER_TYPE` | Scheduler class name | `InMemoryScheduler` |
+All settings are controlled via environment variables. The JSON config files serve as defaults; environment variables override them at runtime.
 
-### Project Structure
+| 变量 / Variable | 说明 / Description | 默认值 / Default |
+|---|---|---|
+| `REDIS_ENABLED` | 启用 Redis 调度器 / Enable Redis scheduler | `false` |
+| `REDIS_HOST` | Redis 主机名 / Redis hostname | `redis` |
+| `REDIS_PORT` | Redis 端口 / Redis port | `6379` |
+| `REDIS_PASSWORD` | Redis 密码 / Redis password | _(empty)_ |
+| `REDIS_USESSL` | 使用 TLS/SSL | `false` |
+| `SCHEDULER_TYPE` | 调度器类名 / Scheduler class name | `InMemoryScheduler` |
+
+### 项目结构 / Project Structure
 
 ```
 NScrapy/
-├── docker-compose.yml          # All-in-one compose for 3 modes
-├── Dockerfile.Spider           # Multi-stage build for Spider
-├── Dockerfile.Downloader       # Multi-stage build for Downloader
-├── appsettings.spider.json     # Default Spider config
-├── appsettings.downloader.json # Default Downloader config
-├── NScrapy/                    # NScrapy.Shell library
-├── NScrapy.Project/            # Spider entry point (Main)
-├── NScrapy.DownloaderShell/    # Downloader worker (Executable)
+├── docker-compose.yml          # 三合一 compose 文件 / All-in-one compose for 3 modes
+├── Dockerfile.Spider           # Spider 多阶段构建 / Multi-stage build for Spider
+├── Dockerfile.Downloader       # Downloader 多阶段构建 / Multi-stage build for Downloader
+├── appsettings.spider.json     # Spider 默认配置 / Default Spider config
+├── appsettings.downloader.json # Downloader 默认配置 / Default Downloader config
+├── NScrapy/                    # NScrapy.Shell 库
+├── NScrapy.Project/            # Spider 入口 / Spider entry point (Main)
+├── NScrapy.DownloaderShell/    # Downloader 工作进程 / Downloader worker
 └── ...
 ```
 
-### Building Images Manually
+### 手动构建镜像 / Building Images Manually
 
 ```bash
+# 构建 Spider 镜像
 # Build Spider image
 docker build -f Dockerfile.Spider -t nscrapy-spider .
 
+# 构建 Downloader 镜像
 # Build Downloader image
 docker build -f Dockerfile.Downloader -t nscrapy-downloader .
 ```
 
-### Architecture
+### 架构 / Architecture
 
 ```
                     ┌─────────────────┐
-                    │  Spider(s)      │  ← Schedules requests
+                    │  Spider(s)      │  ← 调度请求 / Schedules requests
                     │  (Crawler logic) │
                     └────────┬────────┘
                              │ Redis queues
                     ┌─────────▼────────┐
-                    │  Downloader(s)  │  ← HTTP workers
+                    │  Downloader(s)  │  ← HTTP 工作器 / HTTP workers
                     │  (Workers)       │
                     └─────────────────┘
 ```
 
+---
+
+## 编程指南 / Programming Guide
+
+### Fluent API（推荐方式 / Recommended Way）
+
+NScrapy 提供流式 API，让爬虫编写更加简洁直观。通过 `NScrapy.CreateSpider()` 可以链式调用配置爬虫行为，支持本地运行和分布式运行两种模式。
+
+NScrapy provides a Fluent API for writing spiders in a concise and intuitive chain-call style. Use `NScrapy.CreateSpider()` to configure and run spiders, supporting both local and distributed modes.
+
+#### 本地爬虫 / Local Spider
+
+```csharp
+// Local spider / 本地爬虫
+NScrapy.CreateSpider("MySpider")
+    .StartUrl("https://example.com")
+    .OnResponse(r => {
+        Console.WriteLine(r.CssSelector("title::text").Extract());
+    })
+    .AddPipeline<MyPipeline>()
+    .Configure(o => o.Concurrency = 5)
+    .Run();
+```
+
+#### 分布式爬虫 / Distributed Spider
+
+```csharp
+// Distributed spider / 分布式爬虫
+NScrapy.CreateSpider("MySpider")
+    .StartUrl("https://example.com")
+    .OnResponse(r => { /* parse / 解析 */ })
+    .Distributed(d => d
+        .UseRedis("localhost:6379")
+        .ReceiverQueue("nscrapy:requests")
+        .ResponseQueue("nscrapy:responses")
+    )
+    .Run();
+```
+
+#### SpiderOptions 配置项 / Configuration Options
+
+| 选项 / Option | 类型 / Type | 说明 / Description |
+|---|---|---|
+| `Concurrency` | `int` | 并发请求数（默认 1）/ Concurrent requests, default 1 |
+| `DelayMs` | `int` | 请求间隔毫秒（默认 0）/ Delay between requests (ms), default 0 |
+| `MaxRetries` | `int` | 最大重试次数（默认 3）/ Max retry count, default 3 |
+| `TimeoutMs` | `int` | 请求超时毫秒（默认 30000）/ Request timeout (ms), default 30000 |
+| `UserAgents` | `List<string>` | User-Agent 列表，随机选用 / User-Agent list, randomly selected |
+
+```csharp
+NScrapy.CreateSpider("MySpider")
+    .StartUrl("https://example.com")
+    .OnResponse(r => { /* parse / 解析 */ })
+    .Configure(o => {
+        o.Concurrency = 5;
+        o.DelayMs = 1000;
+        o.MaxRetries = 3;
+        o.TimeoutMs = 15000;
+        o.UserAgents = new List<string> {
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
+        };
+    })
+    .Run();
+```
+
+#### JsRenderMiddleware（JS 渲染中间件）
+
+启用 JavaScript 渲染支持（用于抓取 SPA 页面的内容）：
+
+Enable JavaScript rendering support (for crawling SPA pages):
+
+```csharp
+NScrapy.CreateSpider("MySpider")
+    .StartUrl("https://example.com")
+    .OnResponse(r => { /* parse / 解析 */ })
+    .AddDownloaderMiddleware<JsRenderMiddleware>()
+    .Run();
+```
+
+> ⚠️ 注意：`JsRenderMiddleware` 目前为存根实现，功能开发中。
+> ⚠️ Note: `JsRenderMiddleware` is currently a stub implementation; full functionality is under development.
+
+---
+
+## 分布式配置 / Distributed Configuration
+
+### Redis 配置 / Redis Configuration
+
+#### Spider 端 / Spider Side
+
+修改项目中的 `appsettings.json`：
+
+Modify `appsettings.json` in your project:
+
+```json
+{
+  "Scheduler": {
+    "SchedulerType": "NScrapy.Scheduler.RedisExt.RedisScheduler"
+  },
+  "Scheduler.RedisExt": {
+    "RedisServer": "192.168.0.106",
+    "RedisPort": "6379",
+    "ReceiverQueue": "NScrapy.Downloader",
+    "ResponseQueue": "NScrapy.ResponseQueue"
+  }
+}
+```
+
+#### Downloader 端 / Downloader Side
+
+修改 `NScrapy.DownloaderShell.dll` 同层目录中的 `appsettings.json`：
+
+Modify `appsettings.json` under `NScrapy.DownloaderShell.dll` directory:
+
+```json
+{
+  "Scheduler": {
+    "SchedulerType": "NScrapy.Scheduler.RedisExt.RedisScheduler"
+  },
+  "Scheduler.RedisExt": {
+    "RedisServer": "192.168.0.106",
+    "RedisPort": "6379",
+    "ReceiverQueue": "NScrapy.Downloader",
+    "ResponseQueue": "NScrapy.ResponseQueue"
+  }
+}
+```
+
+单独运行 DownloaderShell：
+Run DownloaderShell individually:
+
+```bash
+dotnet /path/to/NScrapy.DownloaderShell.dll
+```
+
+### 状态更新中间件 / Status Updater Middleware
+
+如果需要将 Downloader 状态更新到 Redis（用于监控），可以在 `appsettings.json` 中添加：
+
+If you want to update Downloader status to Redis (for monitoring), add to `appsettings.json`:
+
+```json
+"DownloaderMiddlewares": [
+  { "Middleware": "NScrapy.DownloaderShell.StatusUpdaterMiddleware" }
+]
+```
+
+> 💡 [NScrapyWebConsole](https://github.com/xboxeer/NScrapyWebConsole) 会从 Redis 中读取 Downloader 状态数据。
+> 💡 [NScrapyWebConsole](https://github.com/xboxeer/NScrapyWebConsole) reads Downloader status from Redis.
+
+### MongoDB Pipeline
+
+将爬取的数据存储到 MongoDB：
+
+Save crawled data to MongoDB:
+
+```csharp
+public class MongoItemPipeline : IPipeline<JobItem>
+{
+    private MongoClient client = new MongoClient("mongodb://localhost:27017");
+    public async void ProcessItem(JobItem item, ISpider spider)
+    {
+        var db = client.GetDatabase("NScrapy");
+        var collection = db.GetCollection<JobItem>("JobItem");
+        await collection.InsertOneAsync(item);
+    }
+}
+```
+
+添加到 `appsettings.json`：
+Add to `appsettings.json`:
+
+```json
+"Pipelines": [
+  { "Pipeline": "NScrapy.Project.MongoItemPipeline" }
+]
+```
+
+### CSV Pipeline
+
+将数据保存为 CSV 文件：
+
+Save data to CSV file:
+
+```csharp
+public class CSVItemPipeline : IPipeline<JobItem>
+{
+    private string startTime = DateTime.Now.ToString("yyyyMMddhhmm");
+
+    public void ProcessItem(JobItem item, ISpider spider)
+    {
+        var info = $"{item.Title},{item.Firm},{item.Salary},{item.Time},{System.Environment.NewLine}";
+        Console.WriteLine(info);
+        File.AppendAllText($"output-{startTime}.csv", info, Encoding.UTF8);
+    }
+}
+```
+
+添加到 `appsettings.json`：
+Add to `appsettings.json`:
+
+```json
+"Pipelines": [
+  { "Pipeline": "NScrapy.Project.MongoItemPipeline" },
+  { "Pipeline": "NScrapy.Project.CSVItemPipeline" }
+]
+```
+
+---
+
+## 旧版 API / Legacy API
+
+> 📄 旧版类继承 API 文档已移至 [LEGACY.md](./LEGACY.md)。
+> For legacy class-inheritance API documentation, see [LEGACY.md](./LEGACY.md).
