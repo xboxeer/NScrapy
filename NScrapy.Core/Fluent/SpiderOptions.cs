@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using NScrapy.Middleware;
 
 namespace NScrapy
 {
@@ -10,6 +11,7 @@ namespace NScrapy
         public int MaxRetries { get; set; } = 3;
         public int TimeoutMs { get; set; } = 30000;
         public string SchedulerType { get; set; } = "NScrapy.Scheduler.InMemoryScheduler";
+        public JsRenderOptions JsRender { get; set; }
 
         // Distributed configuration
         internal DistributedConfig DistributedConfig { get; set; }

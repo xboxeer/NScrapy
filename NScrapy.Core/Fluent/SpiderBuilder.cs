@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using global::NScrapy.Infra;
 using NScrapy.Scheduler;
 using NScrapy.Engine;
+using NScrapy.Middleware;
 
 namespace NScrapy.Core.Fluent
 {
@@ -101,6 +102,16 @@ namespace NScrapy.Core.Fluent
         {
             var middleware = Activator.CreateInstance<T>();
             _spiderMiddlewares.Add(middleware);
+            return this;
+        }
+
+        public ISpiderBuilder EnableJsRender(Action<JsRenderOptions> configure = null)
+        {
+            var options = _options.JsRender ?? new JsRenderOptions();
+            configure?.Invoke(options);
+            _options.JsRender = options;
+            var middleware = new JsRenderMiddleware(options);
+            _downloaderMiddlewares.Add(middleware);
             return this;
         }
 

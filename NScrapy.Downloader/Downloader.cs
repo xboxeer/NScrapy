@@ -106,8 +106,21 @@ namespace NScrapy.Downloader
         {
             this.Status = DownloaderStatus.Running;
             request.Client = this.httpClient;
-            HttpResponseMessage responseMessage = null;            
-            foreach(var middleware in this.Middlewares)
+
+            // Try async middleware first
+            foreach (var middleware in this.Middlewares)
+            {
+                var asyncResponse = await middleware.ProcessAsync(request);
+                if (asyncResponse != null)
+                {
+                    this.Status = DownloaderStatus.Idle;
+                    return asyncResponse;
+                }
+            }
+
+            // Fall back to sync middleware and normal download
+            HttpResponseMessage responseMessage = null;
+            foreach (var middleware in this.Middlewares)
             {
                 middleware.PreDownload(request);
             }
@@ -140,7 +153,7 @@ namespace NScrapy.Downloader
                 ResponsePlanText = await responseMessage.Content.ReadAsStringAsync(),
                 URL = request.URL
             };
-            
+
             foreach (var middleware in this.Middlewares)
             {
                 middleware.PostDownload(response);
