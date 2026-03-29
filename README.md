@@ -9,19 +9,138 @@ NScrapy is a distributed spider framework based on .NET Core async programming a
 
 ---
 
-## 快速开始 / Quick Start
+## CLI 工具 / CLI Tool
 
 ### 安装 / Installation
+
+```bash
+git clone https://github.com/xboxeer/NScrapy.git
+cd NScrapy
+dotnet build ./NScrapy.Cli/NScrapy.Cli.csproj
+dotnet tool install --global --add-path ./NScrapy.Cli/bin/Debug/net10.0/publish
+```
+
+### nscrapy new — 创建爬虫项目
+
+创建新的爬虫项目模板：
+
+```bash
+nscrapy new <SpiderName> [options]
+```
+
+| 参数/选项 | 说明 |
+|---|---|
+| `<SpiderName>` | 爬虫名称（PascalCase，必填） |
+| `-t, --type <TYPE>` | 模板类型：`basic`（默认）或 `distributed` |
+| `-o, --output <PATH>` | 输出目录（默认 `.`） |
+| `--force` | 覆盖已有文件 |
+
+**示例：**
+
+```bash
+# 创建基础爬虫
+nscrapy new MySpider
+
+# 在指定目录创建
+nscrapy new MySpider -o ./spiders
+
+# 创建分布式爬虫
+nscrapy new MyDistributedSpider -t distributed
+
+# 覆盖已存在的项目
+nscrapy new MySpider --force
+```
+
+### nscrapy run — 运行爬虫
+
+运行爬虫程序：
+
+```bash
+nscrapy run [spider-name] [options]
+```
+
+| 选项 | 说明 |
+|---|---|
+| `--role <ROLE>` | 运行角色：`single`（默认）、`spider`、`downloader` |
+| `--distributed` | 启用分布式模式 |
+| `--redis <HOST:PORT>` | Redis 连接地址 |
+| `--redis-password <PWD>` | Redis 密码 |
+| `--redis-ssl` | 使用 SSL 连接 Redis |
+| `--receiver-queue <NAME>` | 请求队列名称 |
+| `--response-queue <NAME>` | 响应队列名称 |
+| `--concurrency <N>` | 并发请求数 |
+| `--delay <MS>` | 请求间隔（毫秒） |
+| `-c, --config <PATH>` | 配置文件路径 |
+
+**示例：**
+
+```bash
+# 本地单节点运行
+nscrapy run MySpider
+
+# 分布式模式运行
+nscrapy run MySpider --role spider --distributed --redis localhost:6379
+
+# 带 Redis 认证和 SSL
+nscrapy run MySpider --redis localhost:6380 --redis-password secret --redis-ssl
+
+# 调整并发和请求间隔
+nscrapy run MySpider --concurrency 10 --delay 100
+
+# 运行下载器节点
+nscrapy run --role downloader --redis localhost:6379
+
+# 使用自定义配置
+nscrapy run MySpider -c ./config.json
+```
+
+### 配置优先级
+
+配置按以下优先级生效（高 → 低）：
+
+1. **CLI 参数** — 命令行直接指定
+2. **环境变量** — `NSCRAPY_*` 前缀（如 `NSCRAPY_REDIS_HOST`）
+3. **配置文件** — JSON 配置文件
+
+### 项目结构
+
+`nscrapy new` 生成的结构：
+
+```
+MySpider/
+├── Spiders/
+│   └── MySpiderSpider.cs    # 爬虫逻辑
+├── Items/
+│   └── MySpiderItem.cs      # 数据模型
+├── Pipelines/
+│   └── MySpiderPipeline.cs  # 数据处理管道
+├── Program.cs               # 入口
+├── MySpider.csproj
+└── appsettings.json         # 配置
+```
+
+---
+
+## 快速开始 / Quick Start
+
+### 通过 CLI 创建爬虫（推荐）
+
+```bash
+nscrapy new MySpider
+cd MySpider
+nscrapy run MySpider
+```
+
+### 通过 NuGet 集成
 
 ```bash
 dotnet add package NScrapy.Infra
 dotnet add package NScrapy.Scheduler
 ```
 
-### 编写你的第一个爬虫 / Write Your First Spider
+使用 Fluent API 编写爬虫：
 
 ```csharp
-// Local spider
 NScrapy.CreateSpider("MySpider")
     .StartUrl("https://example.com")
     .OnResponse(r => {
@@ -32,13 +151,7 @@ NScrapy.CreateSpider("MySpider")
     .Run();
 ```
 
-启动 NScrapy Shell：
-Start the NScrapy Shell:
-
-```csharp
-var shell = NScrapy.Shell.NScrapy.GetInstance();
-shell.Crawl("JobSpider");
-```
+> 💡 更多 API 用法参见下方「编程指南」章节。
 
 ---
 
@@ -127,27 +240,34 @@ All settings are controlled via environment variables. The JSON config files ser
 
 ```
 NScrapy/
-├── docker-compose.yml          # 三合一 compose 文件 / All-in-one compose for 3 modes
-├── Dockerfile.Spider           # Spider 多阶段构建 / Multi-stage build for Spider
-├── Dockerfile.Downloader       # Downloader 多阶段构建 / Multi-stage build for Downloader
-├── appsettings.spider.json     # Spider 默认配置 / Default Spider config
-├── appsettings.downloader.json # Downloader 默认配置 / Default Downloader config
-├── NScrapy/                    # NScrapy.Shell 库
-├── NScrapy.Project/            # Spider 入口 / Spider entry point (Main)
-├── NScrapy.DownloaderShell/    # Downloader 工作进程 / Downloader worker
-└── ...
+├── NScrapy.Cli/                # CLI 工具（nscrapy new / nscrapy run）
+├── NScrapy.Core/               # 核心抽象层
+├── NScrapy.Engine/             # 爬虫引擎
+├── NScrapy.Infra/              # 基础设施（HTTP、解析器等）
+├── NScrapy.Scheduler/          # 调度器（InMemory / Redis）
+├── NScrapy.Spider/             # Spider 抽象
+├── NScrapy.Downloader/         # Downloader 抽象
+├── docker-compose.yml          # Docker 部署配置（3 种模式）
+├── Dockerfile.Spider           # Spider 镜像构建
+├── Dockerfile.Downloader        # Downloader 镜像构建
+├── appsettings.spider.json     # Spider 默认配置
+└── appsettings.downloader.json # Downloader 默认配置
 ```
 
 ### 手动构建镜像 / Building Images Manually
 
 ```bash
 # 构建 Spider 镜像
-# Build Spider image
 docker build -f Dockerfile.Spider -t nscrapy-spider .
 
 # 构建 Downloader 镜像
-# Build Downloader image
 docker build -f Dockerfile.Downloader -t nscrapy-downloader .
+
+# 运行 spider 节点
+docker run nscrapy-spider run MySpider --role spider --distributed
+
+# 运行 downloader 节点
+docker run nscrapy-downloader run --role downloader
 ```
 
 ### 架构 / Architecture
