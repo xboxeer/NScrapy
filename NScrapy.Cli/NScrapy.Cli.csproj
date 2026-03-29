@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>nscrapy</AssemblyName>
+    <RootNamespace>NScrapy.Cli</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Spectre.Console.Cli" Version="0.53.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NScrapy.Infra\NScrapy.Infra.csproj" />
+    <ProjectReference Include="..\NScrapy.Core\NScrapy.Core.csproj" />
+    <ProjectReference Include="..\NScrapy.Scheduler\NScrapy.Scheduler.csproj" />
+    <ProjectReference Include="..\NScrapy.Downloader\NScrapy.Downloader.csproj" />
+    <ProjectReference Include="..\NScrapy.Engine\NScrapy.Engine.csproj" />
+    <ProjectReference Include="..\NScrapy.Spider\NScrapy.Spider.csproj" />
+    <ProjectReference Include="..\NScrapy\NScrapy.Shell.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>nscrapy</ToolCommandName>
+    <PackageOutputPath>./nupkg</PackageOutputPath>
+  </PropertyGroup>
+
+</Project>

@@ -1,19 +1,20 @@
 # =============================================================================
-# Dockerfile.Downloader - Multi-stage build for NScrapy DownloaderShell
+# Dockerfile.Downloader - Multi-stage build for NScrapy CLI (Downloader mode)
 # =============================================================================
-# Build stage: compile NScrapy.DownloaderShell (Executable)
+# Build stage: compile NScrapy.Cli with all dependencies
 # Runtime stage: run with .NET 10.0 runtime
 #
 # Usage:
 #   docker build -f Dockerfile.Downloader -t nscrapy-downloader .
-#   docker run nscrapy-downloader
+#   docker run nscrapy-downloader run --role downloader
 #
-# Environment variables (override appsettings.json):
-#   REDIS_ENABLED       - Enable Redis ("true" / "false")
+# Environment variables (override CLI args):
 #   REDIS_HOST          - Redis host address
 #   REDIS_PORT          - Redis port (default: 6379)
 #   REDIS_PASSWORD      - Redis password
 #   REDIS_USESSL        - Use SSL for Redis ("true" / "false")
+#   NSCRAPY_REDIS_HOST  - Same as REDIS_HOST (preferred)
+#   NSCRAPY_REDIS_PORT  - Same as REDIS_PORT (preferred)
 # =============================================================================
 
 # ---- Build Stage ----
@@ -22,40 +23,45 @@ WORKDIR /src
 
 # Copy solution and project files (layer caching optimisation)
 COPY NScrapy.sln                         ./
-COPY NScrapy.DownloaderShell/NScrapy.DownloaderShell.csproj  NScrapy.DownloaderShell/
+COPY NScrapy.Cli/NScrapy.Cli.csproj        NScrapy.Cli/
+COPY NScrapy.Core/NScrapy.Core.csproj      NScrapy.Core/
 COPY NScrapy.Downloader/NScrapy.Downloader.csproj    NScrapy.Downloader/
 COPY NScrapy.Infra/NScrapy.Infra.csproj     NScrapy.Infra/
 COPY NScrapy.Scheduler/NScrapy.Scheduler.csproj  NScrapy.Scheduler/
+COPY NScrapy.Engine/NScrapy.Engine.csproj  NScrapy.Engine/
+COPY NScrapy.Spider/NScrapy.Spider.csproj    NScrapy.Spider/
 
 # Restore NuGet packages
-RUN dotnet restore NScrapy.DownloaderShell/NScrapy.DownloaderShell.csproj
+RUN dotnet restore NScrapy.Cli/NScrapy.Cli.csproj
 
 # Copy source code
-COPY NScrapy.DownloaderShell/  NScrapy.DownloaderShell/
-COPY NScrapy.Downloader/       NScrapy.Downloader/
-COPY NScrapy.Infra/            NScrapy.Infra/
-COPY NScrapy.Scheduler/         NScrapy.Scheduler/
+COPY NScrapy.Cli/              NScrapy.Cli/
+COPY NScrapy.Core/             NScrapy.Core/
+COPY NScrapy.Downloader/        NScrapy.Downloader/
+COPY NScrapy.Infra/             NScrapy.Infra/
+COPY NScrapy.Scheduler/        NScrapy.Scheduler/
+COPY NScrapy.Engine/            NScrapy.Engine/
+COPY NScrapy.Spider/           NScrapy.Spider/
 
-# Build and publish
-WORKDIR /src/NScrapy.DownloaderShell
-RUN dotnet build -c Release --no-restore -o /app/build
-RUN dotnet publish -c Release --no-build -o /app/publish
+# Build and publish CLI
+WORKDIR /src/NScrapy.Cli
+RUN dotnet publish -c Release --no-restore -o /app/publish -p:PublishSingleFile=false
 
 # ---- Runtime Stage ----
-FROM mcr.microsoft.com/dotnet/runtime:10.0 AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 
 # Copy published output
 COPY --from=build /app/publish .
 
 # Copy log4net config
-COPY NScrapy.DownloaderShell/log4net.config ./
+COPY NScrapy.Infra/log4net.config ./ 2>/dev/null || true
 
 # Environment defaults
 ENV DOTNET_RUNNING_IN_CONTAINER=true
-ENV REDIS_ENABLED=true
 ENV REDIS_HOST=redis
 ENV REDIS_PORT=6379
 
-# Entry point: run the DownloaderShell executable
-ENTRYPOINT ["dotnet", "NScrapy.DownloaderShell.dll"]
+# Entry point: run the CLI in downloader mode
+# Usage: docker run nscrapy-downloader run --role downloader
+ENTRYPOINT ["nscrapy"]

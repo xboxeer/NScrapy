@@ -2,25 +2,27 @@
 # NScrapy Docker Compose - Three Deployment Modes
 # =============================================================================
 # Mode 1 - local-only:
-#   Redis disabled. Spider and Downloader run locally without Redis.
-#   This uses InMemoryScheduler (single-process mode).
+#   Redis disabled. Single spider runs locally without Redis.
+#   Usage: docker compose up -d spider
 #
 # Mode 2 - local-redis:
 #   Uses a local Redis container for distributed scraping.
 #   All services on the same Docker network.
+#   Usage: docker compose --profile local-redis up -d
 #
 # Mode 3 - managed-redis:
 #   Uses an external Redis (e.g., Azure Redis Cache, ElastiCache).
 #   Configure REDIS_HOST, REDIS_PASSWORD, REDIS_PORT, REDIS_USESSL via .env.
+#   Usage: docker compose up -d
 # =============================================================================
 
 services:
 
   # ---------------------------------------------------------------------------
   # Spider Service
-  # - Runs the NScrapy.Shell / NScrapy.Project crawler
-  # - Reads configuration from appsettings.spider.json (mapped via volume)
-  # - Environment variables override JSON config values
+  # - Runs the NScrapy CLI spider node
+  # - Command format: nscrapy run <spider-name> [options]
+  # - Environment variables override CLI args (lowest priority)
   # - Scale with: docker-compose up -d --scale spider=3
   # ---------------------------------------------------------------------------
   spider:
@@ -28,33 +30,34 @@ services:
       context: .
       dockerfile: Dockerfile.Spider
     container_name: nscrapy-spider
+    command: run ${SPIDER_NAME:-MySpider} --role spider --distributed
     environment:
-      # Redis mode: "true" to enable Redis-backed scheduler, "false" for in-memory
-      - REDIS_ENABLED=${REDIS_ENABLED:-false}
-      # Redis connection (used when REDIS_ENABLED=true)
+      # Redis configuration
       - REDIS_HOST=${REDIS_HOST:-redis}
       - REDIS_PORT=${REDIS_PORT:-6379}
       - REDIS_PASSWORD=${REDIS_PASSWORD:-}
       - REDIS_USESSL=${REDIS_USESSL:-false}
-      # Spider-specific settings
-      - ASPNETCORE_ENVIRONMENT=Production
-      - SpiderEngine__SpiderEngineName=${SPIDER_ENGINE_NAME:-NScrapy.Engine.NScrapyEngine}
-      - Scheduler__SchedulerType=${SCHEDULER_TYPE:-NScrapy.Scheduler.InMemoryScheduler}
+      # Spider settings
+      - NSCRAPY_CONCURRENCY=${CONCURRENCY:-5}
+      - NSCRAPY_RECEIVER_QUEUE=${RECEIVER_QUEUE:-nscrapy:requests}
+      - NSCRAPY_RESPONSE_QUEUE=${RESPONSE_QUEUE:-nscrapy:responses}
+      # CLI will set these automatically when --distributed is used
+      - REDIS_ENABLED=true
     volumes:
-      # Mount example config as default; override with your own appsettings.spider.json
+      # Mount config file (optional, CLI args take priority)
       - ./appsettings.spider.json:/app/appsettings.json:ro
-      # Mount a custom spider project if needed
-      - ./NScrapy.Project:/app/NScrapy.Project:ro
     depends_on:
       - redis
     networks:
       - nscrapy-net
     restart: unless-stopped
+    profiles:
+      - local-redis
 
   # ---------------------------------------------------------------------------
-  # Downloader Service (DownloaderShell)
-  # - Runs the distributed downloader workers
-  # - Pulls requests from Redis queue and sends HTTP requests
+  # Downloader Service
+  # - Runs the NScrapy CLI downloader node
+  # - Command format: nscrapy run --role downloader
   # - Scale with: docker-compose up -d --scale downloader=4
   # ---------------------------------------------------------------------------
   downloader:
@@ -62,13 +65,17 @@ services:
       context: .
       dockerfile: Dockerfile.Downloader
     container_name: nscrapy-downloader
+    command: run --role downloader
     environment:
-      - REDIS_ENABLED=${REDIS_ENABLED:-true}
+      # Redis configuration
       - REDIS_HOST=${REDIS_HOST:-redis}
       - REDIS_PORT=${REDIS_PORT:-6379}
       - REDIS_PASSWORD=${REDIS_PASSWORD:-}
       - REDIS_USESSL=${REDIS_USESSL:-false}
-      - ASPNETCORE_ENVIRONMENT=Production
+      # CLI settings
+      - NSCRAPY_RECEIVER_QUEUE=${RECEIVER_QUEUE:-nscrapy:requests}
+      - NSCRAPY_RESPONSE_QUEUE=${RESPONSE_QUEUE:-nscrapy:responses}
+      - REDIS_ENABLED=true
     volumes:
       - ./appsettings.downloader.json:/app/appsettings.json:ro
     depends_on:
@@ -76,7 +83,8 @@ services:
     networks:
       - nscrapy-net
     restart: unless-stopped
-    # Scale multiple downloader workers (run with: docker-compose up -d --scale downloader=4)
+    profiles:
+      - local-redis
     deploy:
       replicas: 1
 
@@ -94,7 +102,6 @@ services:
     networks:
       - nscrapy-net
     restart: unless-stopped
-    # Only start this service in local-redis mode (not in managed-redis mode)
     profiles:
       - local-redis
 
