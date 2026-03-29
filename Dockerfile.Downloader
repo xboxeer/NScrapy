@@ -1,0 +1,61 @@
+# =============================================================================
+# Dockerfile.Downloader - Multi-stage build for NScrapy DownloaderShell
+# =============================================================================
+# Build stage: compile NScrapy.DownloaderShell (Executable)
+# Runtime stage: run with .NET 10.0 runtime
+#
+# Usage:
+#   docker build -f Dockerfile.Downloader -t nscrapy-downloader .
+#   docker run nscrapy-downloader
+#
+# Environment variables (override appsettings.json):
+#   REDIS_ENABLED       - Enable Redis ("true" / "false")
+#   REDIS_HOST          - Redis host address
+#   REDIS_PORT          - Redis port (default: 6379)
+#   REDIS_PASSWORD      - Redis password
+#   REDIS_USESSL        - Use SSL for Redis ("true" / "false")
+# =============================================================================
+
+# ---- Build Stage ----
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /src
+
+# Copy solution and project files (layer caching optimisation)
+COPY NScrapy.sln                         ./
+COPY NScrapy.DownloaderShell/NScrapy.DownloaderShell.csproj  NScrapy.DownloaderShell/
+COPY NScrapy.Downloader/NScrapy.Downloader.csproj    NScrapy.Downloader/
+COPY NScrapy.Infra/NScrapy.Infra.csproj     NScrapy.Infra/
+COPY NScrapy.Scheduler/NScrapy.Scheduler.csproj  NScrapy.Scheduler/
+
+# Restore NuGet packages
+RUN dotnet restore NScrapy.DownloaderShell/NScrapy.DownloaderShell.csproj
+
+# Copy source code
+COPY NScrapy.DownloaderShell/  NScrapy.DownloaderShell/
+COPY NScrapy.Downloader/       NScrapy.Downloader/
+COPY NScrapy.Infra/            NScrapy.Infra/
+COPY NScrapy.Scheduler/         NScrapy.Scheduler/
+
+# Build and publish
+WORKDIR /src/NScrapy.DownloaderShell
+RUN dotnet build -c Release --no-restore -o /app/build
+RUN dotnet publish -c Release --no-build -o /app/publish
+
+# ---- Runtime Stage ----
+FROM mcr.microsoft.com/dotnet/runtime:10.0 AS runtime
+WORKDIR /app
+
+# Copy published output
+COPY --from=build /app/publish .
+
+# Copy log4net config
+COPY NScrapy.DownloaderShell/log4net.config ./
+
+# Environment defaults
+ENV DOTNET_RUNNING_IN_CONTAINER=true
+ENV REDIS_ENABLED=true
+ENV REDIS_HOST=redis
+ENV REDIS_PORT=6379
+
+# Entry point: run the DownloaderShell executable
+ENTRYPOINT ["dotnet", "NScrapy.DownloaderShell.dll"]
