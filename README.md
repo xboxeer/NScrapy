@@ -358,3 +358,115 @@ Usage:
       { "Pipeline": "NScrapy.Project.MongoItemPipeline" },
       { "Pipeline": "NScrapy.Project.CSVItemPipeline" }
     ],
+
+---
+
+## 🐳 Docker Deployment
+
+NScrapy supports containerized deployment with Docker Compose across three modes:
+
+| Mode | Use Case | Redis |
+|------|----------|-------|
+| **local-only** | Single-node, no Redis | None (InMemoryScheduler) |
+| **local-redis** | Multi-worker on same host | Local Redis container |
+| **managed-redis** | Cloud / production deploy | External Redis (Azure, ElastiCache, etc.) |
+
+### Prerequisites
+
+- Docker & Docker Compose v2+
+- .NET 10.0 (for local development/builds)
+
+### Quick Start
+
+**1. Clone and configure**
+
+```bash
+git clone https://github.com/your-org/NScrapy.git
+cd NScrapy
+```
+
+**2. Create a `.env` file for your mode**
+
+```bash
+# Example for managed-redis mode (Azure Redis Cache)
+cat > .env << 'EOF'
+REDIS_ENABLED=true
+REDIS_HOST=your-redis.redis.cache.windows.net
+REDIS_PORT=6380
+REDIS_PASSWORD=your-access-key-here
+REDIS_USESSL=true
+EOF
+```
+
+**3. Choose your mode and start**
+
+```bash
+# Mode 1: Local only (no Redis)
+docker-compose up -d
+
+# Mode 2: Local + local Redis container
+docker-compose --profile local-redis up -d
+
+# Mode 3: Managed Redis (uncomment Redis host in .env first)
+docker-compose up -d
+```
+
+**4. Scale Spider and Downloader workers**
+
+```bash
+# Run 3 spider instances and 4 downloader workers
+docker-compose up -d --scale spider=3 --scale downloader=4
+```
+
+### Configuration
+
+All settings are controlled via environment variables. The JSON config files (`appsettings.spider.json`, `appsettings.downloader.json`) serve as defaults; environment variables override them at runtime.
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `REDIS_ENABLED` | Enable Redis scheduler | `false` |
+| `REDIS_HOST` | Redis hostname | `redis` |
+| `REDIS_PORT` | Redis port | `6379` |
+| `REDIS_PASSWORD` | Redis password | _(empty)_ |
+| `REDIS_USESSL` | Use TLS/SSL | `false` |
+| `SCHEDULER_TYPE` | Scheduler class name | `InMemoryScheduler` |
+
+### Project Structure
+
+```
+NScrapy/
+├── docker-compose.yml          # All-in-one compose for 3 modes
+├── Dockerfile.Spider           # Multi-stage build for Spider
+├── Dockerfile.Downloader       # Multi-stage build for Downloader
+├── appsettings.spider.json     # Default Spider config
+├── appsettings.downloader.json # Default Downloader config
+├── NScrapy/                    # NScrapy.Shell library
+├── NScrapy.Project/            # Spider entry point (Main)
+├── NScrapy.DownloaderShell/    # Downloader worker (Executable)
+└── ...
+```
+
+### Building Images Manually
+
+```bash
+# Build Spider image
+docker build -f Dockerfile.Spider -t nscrapy-spider .
+
+# Build Downloader image
+docker build -f Dockerfile.Downloader -t nscrapy-downloader .
+```
+
+### Architecture
+
+```
+                    ┌─────────────────┐
+                    │  Spider(s)      │  ← Schedules requests
+                    │  (Crawler logic) │
+                    └────────┬────────┘
+                             │ Redis queues
+                    ┌─────────▼────────┐
+                    │  Downloader(s)  │  ← HTTP workers
+                    │  (Workers)       │
+                    └─────────────────┘
+```
+

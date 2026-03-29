@@ -1,0 +1,74 @@
+# =============================================================================
+# Dockerfile.Spider - Multi-stage build for NScrapy Spider
+# =============================================================================
+# Build stage: compile the Spider / Shell library
+# Runtime stage: run with .NET 10.0 runtime
+#
+# Usage:
+#   docker build -f Dockerfile.Spider -t nscrapy-spider .
+#   docker run nscrapy-spider
+#
+# Environment variables (override appsettings.json):
+#   REDIS_ENABLED       - Enable Redis scheduler ("true" / "false")
+#   REDIS_HOST          - Redis host address
+#   REDIS_PORT          - Redis port (default: 6379)
+#   REDIS_PASSWORD      - Redis password
+#   REDIS_USESSL        - Use SSL for Redis ("true" / "false")
+#   Scheduler__SchedulerType - Scheduler type (InMemoryScheduler / RedisScheduler)
+# =============================================================================
+
+# ---- Build Stage ----
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /src
+
+# Copy solution and project files first (layer caching optimisation)
+COPY NScrapy.sln                       ./
+COPY NScrapy/NScrapy.Shell.csproj      NScrapy/
+COPY NScrapy/NScrapy.csproj            NScrapy/ 2>/dev/null || true
+COPY NScrapy.Engine/NScrapy.Engine.csproj  NScrapy.Engine/
+COPY NScrapy.Infra/NScrapy.Infra.csproj   NScrapy.Infra/
+COPY NScrapy.Scheduler/NScrapy.Scheduler.csproj  NScrapy.Scheduler/
+COPY NScrapy.Spider/NScrapy.Spider.csproj    NScrapy.Spider/
+COPY NScrapy.Project/NScrapy.Project.csproj  NScrapy.Project/
+COPY NScrapy.Downloader/NScrapy.Downloader.csproj  NScrapy.Downloader/
+COPY NScrapy.DownloaderShell/NScrapy.DownloaderShell.csproj  NScrapy.DownloaderShell/
+
+# Restore all NuGet packages
+RUN dotnet restore NScrapy/NScrapy.Shell.csproj
+RUN dotnet restore NScrapy.Project/NScrapy.Project.csproj
+
+# Copy source code
+COPY NScrapy/              NScrapy/
+COPY NScrapy.Engine/       NScrapy.Engine/
+COPY NScrapy.Infra/        NScrapy.Infra/
+COPY NScrapy.Scheduler/    NScrapy.Scheduler/
+COPY NScrapy.Spider/       NScrapy.Spider/
+COPY NScrapy.Project/      NScrapy.Project/
+COPY NScrapy.Downloader/   NScrapy.Downloader/
+COPY NScrapy.DownloaderShell/ NScrapy.DownloaderShell/
+
+# Build NScrapy.Project (contains the Main entry point that uses NScrapy.Shell)
+WORKDIR /src/NScrapy.Project
+RUN dotnet build -c Release --no-restore -o /app/build
+
+# Publish the Spider project
+WORKDIR /src/NScrapy.Project
+RUN dotnet publish -c Release --no-build -o /app/publish /p:UseAppHost=false
+
+# ---- Runtime Stage ----
+FROM mcr.microsoft.com/dotnet/runtime:10.0 AS runtime
+WORKDIR /app
+
+# Copy published output from build stage
+COPY --from=build /app/publish .
+
+# Copy log4net config so logging works inside the container
+COPY NScrapy.Infra/log4net.config ./ 2>/dev/null || true
+
+# Environment defaults
+ENV DOTNET_RUNNING_IN_CONTAINER=true
+ENV ASPNETCORE_URLS=http://+:80
+ENV REDIS_ENABLED=false
+
+# Entry point: run the Spider (NScrapy.Project contains Main)
+ENTRYPOINT ["dotnet", "NScrapy.Project.dll"]

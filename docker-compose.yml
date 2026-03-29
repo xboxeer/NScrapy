@@ -1,0 +1,106 @@
+# =============================================================================
+# NScrapy Docker Compose - Three Deployment Modes
+# =============================================================================
+# Mode 1 - local-only:
+#   Redis disabled. Spider and Downloader run locally without Redis.
+#   This uses InMemoryScheduler (single-process mode).
+#
+# Mode 2 - local-redis:
+#   Uses a local Redis container for distributed scraping.
+#   All services on the same Docker network.
+#
+# Mode 3 - managed-redis:
+#   Uses an external Redis (e.g., Azure Redis Cache, ElastiCache).
+#   Configure REDIS_HOST, REDIS_PASSWORD, REDIS_PORT, REDIS_USESSL via .env.
+# =============================================================================
+
+services:
+
+  # ---------------------------------------------------------------------------
+  # Spider Service
+  # - Runs the NScrapy.Shell / NScrapy.Project crawler
+  # - Reads configuration from appsettings.spider.json (mapped via volume)
+  # - Environment variables override JSON config values
+  # - Scale with: docker-compose up -d --scale spider=3
+  # ---------------------------------------------------------------------------
+  spider:
+    build:
+      context: .
+      dockerfile: Dockerfile.Spider
+    container_name: nscrapy-spider
+    environment:
+      # Redis mode: "true" to enable Redis-backed scheduler, "false" for in-memory
+      - REDIS_ENABLED=${REDIS_ENABLED:-false}
+      # Redis connection (used when REDIS_ENABLED=true)
+      - REDIS_HOST=${REDIS_HOST:-redis}
+      - REDIS_PORT=${REDIS_PORT:-6379}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      - REDIS_USESSL=${REDIS_USESSL:-false}
+      # Spider-specific settings
+      - ASPNETCORE_ENVIRONMENT=Production
+      - SpiderEngine__SpiderEngineName=${SPIDER_ENGINE_NAME:-NScrapy.Engine.NScrapyEngine}
+      - Scheduler__SchedulerType=${SCHEDULER_TYPE:-NScrapy.Scheduler.InMemoryScheduler}
+    volumes:
+      # Mount example config as default; override with your own appsettings.spider.json
+      - ./appsettings.spider.json:/app/appsettings.json:ro
+      # Mount a custom spider project if needed
+      - ./NScrapy.Project:/app/NScrapy.Project:ro
+    depends_on:
+      - redis
+    networks:
+      - nscrapy-net
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # Downloader Service (DownloaderShell)
+  # - Runs the distributed downloader workers
+  # - Pulls requests from Redis queue and sends HTTP requests
+  # - Scale with: docker-compose up -d --scale downloader=4
+  # ---------------------------------------------------------------------------
+  downloader:
+    build:
+      context: .
+      dockerfile: Dockerfile.Downloader
+    container_name: nscrapy-downloader
+    environment:
+      - REDIS_ENABLED=${REDIS_ENABLED:-true}
+      - REDIS_HOST=${REDIS_HOST:-redis}
+      - REDIS_PORT=${REDIS_PORT:-6379}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      - REDIS_USESSL=${REDIS_USESSL:-false}
+      - ASPNETCORE_ENVIRONMENT=Production
+    volumes:
+      - ./appsettings.downloader.json:/app/appsettings.json:ro
+    depends_on:
+      - redis
+    networks:
+      - nscrapy-net
+    restart: unless-stopped
+    # Scale multiple downloader workers (run with: docker-compose up -d --scale downloader=4)
+    deploy:
+      replicas: 1
+
+  # ---------------------------------------------------------------------------
+  # Local Redis (only used in local-redis mode)
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: nscrapy-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - nscrapy-net
+    restart: unless-stopped
+    # Only start this service in local-redis mode (not in managed-redis mode)
+    profiles:
+      - local-redis
+
+networks:
+  nscrapy-net:
+    driver: bridge
+
+volumes:
+  redis-data:
